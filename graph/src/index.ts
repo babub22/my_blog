@@ -12,9 +12,6 @@ import cors from 'cors'
 const { graphqlUploadExpress } = require("graphql-upload-minimal");
 
 
-let bodyParser = require('body-parser')
-
-
 import typeDefs from "./schema/typeDefs";
 import resolvers from "./resolvers/resolvers";
 
