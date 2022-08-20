@@ -16,6 +16,15 @@ export let GET_ONE_ARTICLE = gql`
     }
 `
 
+export let GET_ARTICLE_BY_USER=gql`
+    query getArticleByUser($user:String!){
+        getArticleByUser(user:$user){
+            id,content,perex,title,author,imageId,title,createdAt,lastUpdatedAt,comments{id}
+        }
+    }
+
+`
+
 // export let GET_ONE_IMAGE = gql`
 //     query getImageFile($file: Upload!){
 //         getImageFile(file: $file){

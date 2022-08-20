@@ -40,6 +40,11 @@ export default {
             } else {
                 throw new Error('Wrong ID!');
             }
+        },
+        // all articles of a specific person
+        getArticleByUser: async (_:any,{user}:{user:string})=>{
+            console.log(await Article.find({author: user}))
+            return await Article.find({author: user})
         }
     },
     Mutation: {

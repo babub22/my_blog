@@ -71,6 +71,7 @@ export default gql`
     type Query {
         getAllArticles:[Article]
         getArticle(id:ID!):Article
+        getArticleByUser(user:String!):[Article]
     }
 
     scalar Upload
