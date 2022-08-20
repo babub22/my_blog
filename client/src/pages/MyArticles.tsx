@@ -1,23 +1,24 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, Box, Button, IconButton, Snackbar, Typography} from "@mui/material";
+import {Alert, AlertColor, Box, Button, IconButton, Snackbar, Typography} from "@mui/material";
 import {DataGrid, GridColDef} from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {useMutation, useQuery} from "@apollo/client";
-import {GET_ALL_ARTICLES} from "../query/article";
-import {DELETE_ARTICLE} from "../mutation/article";
+import {GET_ALL_ARTICLES} from "../querys/query/article";
+import {DELETE_ARTICLE} from "../querys/mutation/article";
+import {Article} from "../types/types";
 
 
 const MyArticles = () => {
 
-    let {data: allArticles, loading: loadingAllArticles, error: errorAllArticles} = useQuery(GET_ALL_ARTICLES)
-    let [deleteArticle, {data: deletedId, loading: articleDeleting, error: deleteError}] = useMutation(DELETE_ARTICLE);
+    let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
+    let [deleteArticle, {loading: articleDeleting}] = useMutation(DELETE_ARTICLE);
 
-    let [userArticles, setUserArticles] = useState<any>([])
+    let [userArticles, setUserArticles] = useState<Article[]>([])
     let [isDelete,setIsDelete]=useState(false)
 
     const [openAlert, setOpenAlert] = useState(false);
-    const [alertType,setAlertType]=useState('error')
+    const [alertType,setAlertType]=useState<AlertColor>('error')
 
     // fetch data
     useEffect(() => {
@@ -28,8 +29,7 @@ const MyArticles = () => {
 
 
     // handle delete button in table
-    // @ts-ignore
-    const getCommentNumber = (params) => { // @ts-ignore
+    const getCommentNumber = (params: { row: { title: any; }; }) => {
         return (userArticles.filter(f => f.title === params.row.title).map(map => map.comments)).length||[]
     }
 
@@ -76,8 +76,7 @@ const MyArticles = () => {
         }
     ];
 
-    // @ts-ignore
-    const handleDelete = (id) => {
+    const handleDelete = (id:string) => {
         setIsDelete(true)
 
         deleteArticle({
@@ -85,10 +84,12 @@ const MyArticles = () => {
                 id: id
             }
         }).then(({data}) => {
-            setOpenAlert(true);
-            console.log('Deleted '+data)
-            setAlertType('success')// @ts-ignore
-            setUserArticles(userArticles.filter(f=>f.id!==id))
+            if(!articleDeleting){
+                setOpenAlert(true);
+                console.log('Deleted '+data)
+                setAlertType('success')
+                setUserArticles(userArticles.filter(f=>f.id!==id))
+            }
         }).catch(e=>{
             setOpenAlert(true);
             setAlertType('error')
@@ -117,19 +118,15 @@ const MyArticles = () => {
                     pageSize={5}
                     sx={{border: 0}}
                     rowsPerPageOptions={[5]}
-
                     disableSelectionOnClick
                 />
             </Box>
             <Snackbar open={openAlert} autoHideDuration={4000} onClose={handleClose} >
-                {// @ts-ignore
-                    alertType==='error'?
-                            // @ts-ignore
+                {alertType==='error'?
                             <Alert variant="filled" severity={alertType} sx={{ width: '100%' }}>
                                 Something went wrong :(
                             </Alert>
                             :
-                            // @ts-ignore
                             <Alert variant="filled" severity={alertType} sx={{ width: '100%' }}>
                                 The article has been delete successfully!
                             </Alert>}

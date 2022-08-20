@@ -1,4 +1,4 @@
-import {ApolloServer, gql} from 'apollo-server-express'
+import {ApolloServer} from 'apollo-server-express'
 import {ApolloServerPluginDrainHttpServer} from 'apollo-server-core'
 
 import {makeExecutableSchema} from '@graphql-tools/schema';
@@ -11,20 +11,21 @@ import cors from 'cors'
 
 const { graphqlUploadExpress } = require("graphql-upload-minimal");
 
+require('dotenv').config()
+
+const mongoose=require('mongoose');
 
 import typeDefs from "./schema/typeDefs";
 import resolvers from "./resolvers/resolvers";
 
 const schema = makeExecutableSchema({typeDefs, resolvers});
 
-
 async function listen(port: number) {
     const app = express()
     const httpServer = http.createServer(app)
-    //app.use(bodyParser.json())
+
     app.use(graphqlUploadExpress({ maxFileSize: 200000, maxFiles: 10 }));
     app.use(cors());
-
 
     const wsServer = new WebSocketServer({
         server: httpServer,
@@ -33,11 +34,8 @@ async function listen(port: number) {
 
     const serverCleanup = useServer({schema}, wsServer);
 
-    // @ts-ignore
     const server = new ApolloServer({// @ts-ignore
         schema, uploads: false,
-        //uploads: false,
-        // context:({req,res})=>({req,res,pubsub}),
         plugins: [ApolloServerPluginDrainHttpServer({httpServer}),
             {
                 async serverWillStart() {
@@ -56,17 +54,10 @@ async function listen(port: number) {
     app.use(express.static('data'))
 
     await httpServer.listen(port)
-
 }
 
-
-async function main() {
-    try {
-        await listen(8000)
-        console.log('🚀 Server is ready at http://localhost:8000/graphql ')
-    } catch (err) {
-        console.error('💀 Error starting the node server', err)
-    }
-}
-
-void main()
+// start server only after successful database connection
+mongoose.connect(process.env.MONGODB,{useNewUrlParser:true}).then(async ()=>{await listen(8000)})
+    .then(()=>{ console.log('🚀 Server is ready at http://localhost:8000/graphql ')}).catch((e:Error)=>{
+    console.error('💀 Error starting the node server', e)
+})

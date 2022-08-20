@@ -4,26 +4,26 @@ import {useLocation } from "react-router-dom";
 import RelatedList from "../components/RelatedList";
 import ReactMarkdown from 'react-markdown'
 import {useQuery} from "@apollo/client";
-import {GET_ALL_ARTICLES, GET_ONE_ARTICLE} from "../query/article";
+import {GET_ALL_ARTICLES, GET_ONE_ARTICLE} from "../querys/query/article";
 import Comment from "../components/comments/Comment";
+import { Article } from '../types/types';
 
 const SpecificArticle = () => {
 
 
-    let queryId = useLocation()
-    // @ts-ignore
-    queryId=queryId.pathname.toString().replace(/\/article\//,'')
-    console.log(queryId)
+    let urlString = useLocation()
 
-    let {data: allArticles, loading: loadingAllArticles, error: errorAllArticles} = useQuery(GET_ALL_ARTICLES)
-    let {data: oneArticle, loading: loadingOneArticle, error: errorOneArticle} = useQuery(GET_ONE_ARTICLE, {
+    let queryId=urlString.pathname.toString().replace(/\/article\//,'')
+
+    let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
+    let {data: oneArticle, loading: loadingOneArticle} = useQuery(GET_ONE_ARTICLE, {
         variables: {
             id: queryId
         }
     })
 
-    let [relatedArticles, setRelatedArticles] = useState<any>([])
-    let [currentArticle, setCurrentArticle] = useState<any>([])
+    let [relatedArticles, setRelatedArticles] = useState<Article[]>([])
+    let [currentArticle, setCurrentArticle] = useState<Article>()
 
     // fetch this article data
     useEffect(() => {
@@ -54,7 +54,7 @@ const SpecificArticle = () => {
     // randomize for related articles
     const randomize=(array:any)=> {
         let currentIndex = array.length,  randomIndex;
-        while (currentIndex != 0) {
+        while (currentIndex !== 0) {
 
             randomIndex = Math.floor(Math.random() * currentIndex);
             currentIndex--;
@@ -68,27 +68,27 @@ const SpecificArticle = () => {
 
     return (
         <>
-            <Typography variant='h4'>{currentArticle.title}</Typography>
-
-            <Box sx={{display: 'flex', mt: '1rem'}}>
-                <Typography variant='subtitle1'>Author &nbsp; | &nbsp; 22/22/3021</Typography>
+            <Typography variant='h4'>{currentArticle?.title}</Typography>
+            <Box sx={{display: 'flex', mt: '1rem'}// @ts-ignore
+            }> <Typography variant='subtitle1'>{currentArticle?.author} | {currentArticle?.createdAt} </Typography>
             </Box>
 
             <Box sx={{maxWidth: '650vw'}}>
                 <Box sx={{mr: '1rem', mt: '1.5rem', mb: '1.5rem'}}>
                     <Box >
-                        <Box sx={{mb: '1.2rem',objectFit: 'cover',height:'auto'}}>
+                        <Box sx={{objectFit: 'cover', height: '600px'}}>
                             <img
-
-                                style={{  width: '100%',
-                                    height: 'auto',
-                                    objectFit: 'cover',}}
-                                src={"http://localhost:8000/images/"+currentArticle.imageId}
-                                alt={currentArticle.title}/>
+                                style={{
+                                    width: '800px',
+                                    height: '600px',
+                                    objectFit: 'cover',
+                                }}
+                                src={"http://localhost:8000/images/"+currentArticle?.imageId}
+                                alt={currentArticle?.title}/>
                         </Box>
 
                         <ReactMarkdown // @ts-ignore
-                            children={currentArticle.content}/>
+                            children={currentArticle?.content}/>
                     </Box>
 
                     <Box sx={{borderTop: '2px solid #ededed', mb: '1.5rem'}}>
@@ -114,8 +114,7 @@ const SpecificArticle = () => {
                         <Box display="flex"
                              justifyContent="center"
                              alignItems="center">
-                            <RelatedList  // @ts-ignore
-                                articles={randomize(relatedArticles.filter(f =>f.id!=currentArticle.id))}/>
+                            <RelatedList articles={randomize(relatedArticles.filter(f =>f.id!==currentArticle?.id))}/>
                         </Box>
                     </Box>
                     : null}

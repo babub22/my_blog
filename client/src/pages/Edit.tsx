@@ -1,37 +1,39 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, Box, Button, IconButton, Snackbar, TextField, Typography} from "@mui/material";
+import {Alert, AlertColor, Box, Button, IconButton, Snackbar, TextField, Typography} from "@mui/material";
 import {useMutation, useQuery} from "@apollo/client";
-import {GET_ONE_ARTICLE} from "../query/article";
+import {GET_ONE_ARTICLE} from "../querys/query/article";
 import {useLocation} from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {UPDATE_ARTICLE, UPLOAD_IMAGE} from "../mutation/article";
+import {UPDATE_ARTICLE, UPLOAD_IMAGE} from "../querys/mutation/article";
 
 const Edit = () => {
+    //хуево работает едит
         //get id from url string
-        let queryId = useLocation()
-        // @ts-ignore
-        queryId = queryId.pathname.toString().replace(/\/edit\//, '')
+        let urlString = useLocation()
+
+        let queryId = urlString.pathname.toString().replace(/\/edit\//, '')
         console.log(queryId)
 
         //graphql query declaration
-        let {data: oneArticle, loading: loadingOneArticle, error: errorOneArticle} = useQuery(GET_ONE_ARTICLE, {
+        let {data: oneArticle, loading: loadingOneArticle} = useQuery(GET_ONE_ARTICLE, {
             variables: {
                 id: queryId
             }
         })
-        let [editArticle, {data: updateArticle, loading: updateLoading, error: updateError}] = useMutation(UPDATE_ARTICLE);
-        const [uploadImage, {data: image, loading: imageLoading, error: imageError}] = useMutation(UPLOAD_IMAGE)
+        let [editArticle, {loading: updateLoading}] = useMutation(UPDATE_ARTICLE);
+        const [uploadImage] = useMutation(UPLOAD_IMAGE)
 
         // fetch this article data from server
         const [title, setTitle] = useState('')
         const [content, setContent] = useState('')
-        const [imageUrl, setImageUrl] = useState('')
+        const [originalImage, setOriginalImage] = useState('')
+        const [imageUrl, setImageUrl] = useState<File>()
 
         useEffect(() => {
             if (!loadingOneArticle) {
                 setTitle(oneArticle.getArticle.title)
                 setContent(oneArticle.getArticle.content)
-                setImageUrl(oneArticle.getArticle.imageId)
+                setOriginalImage(oneArticle.getArticle.imageId)
             }
         }, [oneArticle])
 
@@ -43,7 +45,7 @@ const Edit = () => {
         //handle snackbar alerts
         const [openAlert, setOpenAlert] = useState(false);
 
-        const [alertType, setAlertType] = useState('error')
+        const [alertType, setAlertType] = useState<AlertColor>('error')
         const [errorHandle, setErrorHandle] = useState<any>('')
 
         const handleSnackbarClose = (event: React.SyntheticEvent | Event, reason?: string) => {
@@ -58,39 +60,30 @@ const Edit = () => {
             const file = (e.target.files[0])
             if (!file) return;
             setImageUrl(file)
+            setOriginalImage('')
         }
 
         // send changes on server
         const handleEdit = () => {
             setOpenAlert(false)
 
-            if (!title) {
-                setIsTitleInvalid(true)
-            } else {
-                setIsTitleInvalid(false)
-            }
-            if ((content.split(' ').filter(f => f.length > 2).length < 20)) {
-                setIsContentInvalid(true)
-            } else {
-                setIsContentInvalid(false)
-            }
+            // validating input data <
+            !title ? setIsTitleInvalid(true) : setIsTitleInvalid(false)
+            content.split(' ').filter(f => f.length > 2).length < 20 ? setIsContentInvalid(true) : setIsContentInvalid(false)
+            //imageUrl === undefined ? setIsImageInvalid(true) : setIsImageInvalid(false)
+            // >
 
-            if (imageUrl.length == 0) {
-                setIsImageInvalid(true)
-            } else {
-                setIsImageInvalid(false)
-            }
-
-            if (title && content.split(' ').filter(f => f.length > 2).length > 20 && imageUrl.length != 0) {
+            if (title && content.split(' ').filter(f => f.length > 2).length > 20)  {
 
                 let perex: string = content.split('.').slice(0, 3).join(' ')//.concat('...');
-                let lastUpdatedAt = new Date()
-                let id=queryId
+                //let lastUpdatedAt = new Date()
+                let id = queryId
 
-                // @ts-ignore
-                if (imageUrl.name) {// if image changed
-                    // @ts-ignore
-                    let imageId = imageUrl.name
+                console.log(originalImage!=='')
+
+               // if (!isImageInvalid) {// if image changed
+
+                    let imageId = imageUrl?.name
 
                     editArticle({
                         variables: {
@@ -99,57 +92,61 @@ const Edit = () => {
                                 title,
                                 content,
                                 perex,
-                                lastUpdatedAt,
                                 imageId
                             }
                         }
-                    }).then(({data}) => {
-                        if (!updateLoading) {
-                            console.log(data)// @ts-ignore
-                            // @ts-ignore
+                    }).then(() => {
+                        console.log('Yea sended')
+                        if (!updateLoading && originalImage==='') {
                             uploadImage({
                                 variables: {file: imageUrl}
-                            }).then(({data}) => {
-                                if (!imageLoading) {
-                                    console.log(data)
+                            }).then(() => {
+                                //if (!imageLoading) {
                                     setAlertType('success')
                                     setErrorHandle('')
                                     setOpenAlert(true);
-                                }
+                               // }
                             }).catch(e => {
                                 setOpenAlert(true);
                                 setErrorHandle(e)
                                 setAlertType('error')
                             })
+                        }else{
+                            setAlertType('success')
+                            setErrorHandle('')
+                            setOpenAlert(true);
                         }
                     }).catch(e => {
                         setOpenAlert(true);
                         setErrorHandle(e)
                         setAlertType('error')
                     })
-                } else { // if the image is not changed
-                    //let imageId = imageUrl
-                    editArticle({
-                        variables: {
-                            input: {
-                                id,
-                                title,
-                                content,
-                                perex,
-                                lastUpdatedAt
-                            }
-                        }
-                    }).then(({data}) => {
-                        console.log(data)
-                        setAlertType('success')
-                        setErrorHandle('')
-                        setOpenAlert(true);
-                    }).catch(e => {
-                        setOpenAlert(true);
-                        setErrorHandle(e)
-                        setAlertType('error')
-                    })
-                }
+
+                // } //else if (isImageInvalid) { // if the image is not changed
+                //     console.log('here')
+                //     setIsImageInvalid(false)
+                //     editArticle({
+                //         variables: {
+                //             input: {
+                //                 id,
+                //                 title,
+                //                 content,
+                //                 perex,
+                //             }
+                //         }
+                //     }).then(({data}) => {
+                //         if (!updateLoading) {
+                //             console.log(data)
+                //             setAlertType('success')
+                //             setErrorHandle('')
+                //             setOpenAlert(true);
+                //         }
+                //     }).catch(e => {
+                //         setOpenAlert(true);
+                //         setErrorHandle(e)
+                //         setAlertType('error')
+                //     })
+                // }
             }
         }
 
@@ -183,12 +180,11 @@ const Edit = () => {
                         </Button>
                         |
                         <>
-                            <Typography>{// @ts-ignore
-                                imageUrl.name ? imageUrl.name : imageUrl}</Typography>
-                            {// @ts-ignore
-                                imageUrl.length != 0 || imageUrl.name ?
+                            <Typography>{
+                                imageUrl!==undefined ? imageUrl.name : originalImage}</Typography>
+                            {/*imageUrl.length != 0*/ imageUrl!==undefined ?
                                     <IconButton onClick={() => {
-                                        setImageUrl('')
+                                        setImageUrl(undefined)
                                     }} aria-label="edit" color="primary">
                                         <DeleteIcon/>
                                     </IconButton>
@@ -215,18 +211,15 @@ const Edit = () => {
                     }}/>
                 </Box>
                 <Snackbar open={openAlert} autoHideDuration={4000} onClose={handleSnackbarClose}>
-                    {// @ts-ignore
-                        errorHandle.message === 'Duplicate name/id' ?
+                    {errorHandle.message === 'Duplicate name/id' ?
                             <Alert variant="filled" severity='error' sx={{width: '100%'}}>
                                 This name is already in use, choose another one!
                             </Alert>
                             : alertType === 'error' ?
-                                // @ts-ignore
                                 <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
                                     Something went wrong :(
                                 </Alert>
                                 :
-                                // @ts-ignore
                                 <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
                                     The article has been sent successfully!
                                 </Alert>}

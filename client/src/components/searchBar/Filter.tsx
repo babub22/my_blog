@@ -14,14 +14,12 @@ const Filter = ({value, onChange, authors}: any) => {
                 >
                     <MenuItem value=''>All authors</MenuItem>
 
-                    {// @ts-ignore
-                        authors.filter((c, index) => {
+                    {
+                        authors.filter((c:any, index:any)=> {
                             return authors.indexOf(c) === index;
-                            // @ts-ignore
-                        }).map(author =>
+                        }).map((author: string) =>
                             <MenuItem key={author} value={author}>{author}</MenuItem>
                         )}
-
                 </Select>
             </FormControl>
         </>

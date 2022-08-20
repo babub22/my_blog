@@ -1,9 +1,7 @@
 import React from 'react';
 import {TextField} from "@mui/material";
 
-const Search = (props: any) => {
-    const {onChange, value} = props;
-
+const Search = ({onChange, value}:{value:string,onChange:any}) => {
     return (
         <>
             <TextField

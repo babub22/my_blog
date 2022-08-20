@@ -29,6 +29,23 @@ export const UPLOAD_IMAGE = gql`
     }
 `;
 
+export const REGISTER_USER = gql`
+    mutation registerNewUser($input: RegistrationFormInput!) {
+        registerNewUser(input: $input){
+            id,username,token,email,createdAt
+        }
+    }
+`;
+
+export const LOGIN = gql`
+    mutation login($username:String!,$password:String!) {
+        login(username:$username,password: $password){
+            id,username,token,email,createdAt
+        }
+    }
+`;
+
+
 
 
 // export const UPLOAD_ARTICLE_IMAGE=gql`

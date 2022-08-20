@@ -4,23 +4,23 @@ import Search from "../components/searchBar/Search";
 import ArticleList from "../components/ArticleList";
 import Filter from "../components/searchBar/Filter";
 import {useQuery} from "@apollo/client";
-import {GET_ALL_ARTICLES} from "../query/article";
+import {GET_ALL_ARTICLES} from "../querys/query/article";
+import {Article} from "../types/types";
 
 const Main = () => {
-
     const [search, setSearch] = useState<string>('');
     const [select, setSelect] = useState<string>('');
 
-    let {data,loading,error}=useQuery(GET_ALL_ARTICLES)
+    let {data:allArticles,loading:allArticlesLoading}=useQuery(GET_ALL_ARTICLES)
 
-    let [articles, setArticles] = useState([]);
+    let [articles, setArticles] = useState<Article[]>([]);
 
     // fetch data from server
     useEffect(()=>{
-        if(!loading){
-            setArticles(data.getAllArticles)
+        if(!allArticlesLoading){
+            setArticles(allArticles.getAllArticles)
         }
-    },[data])
+    },[allArticles])
 
     // Handle select filter
     const handleSelect = (e: any) => {
@@ -31,7 +31,6 @@ const Main = () => {
         if (!select) {
             return articles;
         }
-        // @ts-ignore
         return articles.filter((article) => article.author.toLowerCase() === select.toLowerCase());
     }
 
@@ -40,21 +39,17 @@ const Main = () => {
     // Handle search
     const handleSearch = (e: any) => {
         if (!e.target.value) {
-            setArticles(data.getAllArticles);
+            setArticles(allArticles.getAllArticles);
             setSearch('');
             return;
         }
 
         setSearch(e.target.value);
         setArticles(
-            // @ts-ignore
             articles.filter((article) =>
-                // @ts-ignore
                 article.title.toLowerCase().includes(e.target.value.toLowerCase())
             ))
     };
-
-
 
     return (
         <>
@@ -68,7 +63,6 @@ const Main = () => {
                 />
                 <Filter value={select}
                         onChange={handleSelect}
-                    // @ts-ignore
                         authors={articles.map(article => article.author)}
                 />
             </Box>

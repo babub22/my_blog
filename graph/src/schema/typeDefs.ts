@@ -2,7 +2,7 @@ const {gql}=require("apollo-server-express");
 
 export default gql`
     type Article{
-        id:String
+        id:ID
         content: String
         perex: String
         title: String
@@ -13,16 +13,8 @@ export default gql`
         comments: [Comment]
     }
 
-    type Comment{
-        id:ID
-        author:String
-        content: String
-        createdAt: String
-        rating: Int
-    }
- 
     input ArticleInput{
-        id:String
+        id:ID
         content: String
         perex: String
         title: String
@@ -32,6 +24,17 @@ export default gql`
         author: String
         comments: [CommentInput]
     }
+    
+    
+    
+    type Comment{
+        id:ID
+        author:String
+        content: String
+        createdAt: String
+        rating: Int
+    }
+
     input CommentInput{
         id:ID
         author:String
@@ -40,8 +43,24 @@ export default gql`
         rating: Int
     }
     
+    type User{
+        id:ID!
+        username:String
+        token:String
+        createdAt:String
+        email:String
+    }
+
+    input RegistrationFormInput{
+        username:String
+        password:String
+        email:String
+    }
+    
+    
+    
     input UpdateArticleInput{
-        id:String
+        id:ID
         content: String
         perex: String
         title: String
@@ -68,6 +87,8 @@ export default gql`
         deleteArticle(id:ID!):String
         singleUpload(file: Upload!): File!
         updateArticle(input: UpdateArticleInput!): Article
+        registerNewUser(input:RegistrationFormInput!):User!
+        login(username:String!, password:String!):User!
     }
 
     type Subscription {

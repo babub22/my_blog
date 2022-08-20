@@ -1,14 +1,11 @@
 import React from 'react';
-import {Typography, Box, Card, CardActionArea, CardMedia, CardContent} from "@mui/material";
+import {Typography, Card, CardActionArea, CardMedia, CardContent} from "@mui/material";
+import { Article } from '../types/types';
 
-const RelatedList = ({articles}: any) => {
-
-  //  console.log(articles)
-    // @ts-ignore
+const RelatedList = ({articles}: {articles:Article[]}) => {
     return (
         <>
-            {// @ts-ignore
-                articles.slice(0, 3).map(article =>
+            {articles.slice(0, 3).map(article =>
                         <Card key={article.id} sx={{maxWidth: 345,ml:'2rem'}}>
                             <CardActionArea href={'/article/'+article.id}>
                                 <CardMedia

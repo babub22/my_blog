@@ -1,4 +1,4 @@
-# Getting Started with Create React App
+# Client side
 
 The client side of the blog-app  
 Author: Vladyslav Lisovyi
