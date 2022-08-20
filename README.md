@@ -1,4 +1,4 @@
-# Getting Started with Create React App
+# Blog web app
 
 Full-stack blog project. 
 

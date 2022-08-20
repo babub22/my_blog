@@ -1,4 +1,4 @@
-# Getting Started with Create React App
+# GraphQL client
 
 The server side **(GraphQL)** of the blog-app  
 
