@@ -9,21 +9,20 @@ import Comment from "../components/comments/Comment";
 import {Article, User} from '../types/types';
 import {CREATE_COMMENT} from "../querys/mutation/article";
 import {AuthContext} from "../context/auth";
-import {COMMENTS_SUBSCRIPTION} from "../querys/subscription/article";
 import moment from "moment";
 
 const SpecificArticle = () => {
 
     let {user}: { user: User | null } = useContext(AuthContext)
 
-    const { data, loading } = useSubscription(
-        COMMENTS_SUBSCRIPTION);
+    // const { data, loading } = useSubscription(
+    //     COMMENTS_SUBSCRIPTION);
 
     let urlString = useLocation()
 
     let queryId = urlString.pathname.toString().replace(/\/article\//, '')
 
-    let [createComment, {data:createdComment,loading: commentLoading}] = useMutation(CREATE_COMMENT);
+    let [createComment, {loading: commentLoading}] = useMutation(CREATE_COMMENT);
 
     let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
     let {data: oneArticle, loading: loadingOneArticle} = useQuery(GET_ONE_ARTICLE, {

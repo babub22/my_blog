@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  react-app:
+    image: react-app
+    stdin_open: true
+    ports:
+      - "3000:3000"
+    networks:
+      - blog-app
+  graphql-server:
+    image: graphql-server
+    ports:
+      - "8000:8000"
+    networks:
+      - blog-app
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo:3.6.19-xenial
+    ports:
+      - "27017:27017"
+    networks:
+      - blog-app
+networks:
+  blog-app:
+    driver: bridge
