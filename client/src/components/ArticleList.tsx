@@ -1,6 +1,7 @@
 import {Box, Button, Card, CardActions, CardContent, Grid, Typography} from "@mui/material";
 import React from 'react';
 import {Article} from "../types/types";
+import moment from "moment";
 
 const ArticleList = ({articles}: { articles: Article[] }) => {
     const getFormatDate = (date: Date): string => {
@@ -44,7 +45,7 @@ const ArticleList = ({articles}: { articles: Article[] }) => {
                                 variant='subtitle1'
                                 sx={{mt: '0.35rem', mb: '0.5rem'}}
                             >
-                                {article.author}&nbsp; • &nbsp;{getFormatDate(article.createdAt)}
+                                {article.author}&nbsp; • &nbsp;{moment(article.createdAt).format("DD/MM/YYYY")}
                             </Typography>
                             <Typography
                                 variant='body2'

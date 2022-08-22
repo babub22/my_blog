@@ -17,12 +17,12 @@ export interface NewUser {
 }
 
 
-export type  Comment={
-    id:number
-    author:string
-    content: string
-    createdAt: string
-    rating: number
+export type CommentType={
+    id:number;
+    author:string;
+    content: string;
+    createdAt: string;
+    rating: number;
 }
 
 export interface UpdateArticle {

@@ -1,10 +1,13 @@
-import {ArticleType, NewUser, UpdateArticle, UploadFile} from "../types/types";
-import {PubSub} from 'graphql-subscriptions';
-import {GraphQLUpload} from "graphql-upload-minimal";
-import {UserInputError} from "apollo-server-express";
+import {ArticleType, CommentType, NewUser, UpdateArticle, UploadFile} from "../types/types";
+
+const {PubSub} = require('graphql-subscriptions');
+const {GraphQLUpload} = require("graphql-upload-minimal");
+const {UserInputError} = require("apollo-server-express");
 import {Schema} from "mongoose";
 
-const pubsub = new PubSub();
+// const pubsub = new PubSub();
+
+const pubsub=new PubSub()
 
 const path = require('path')
 const fs = require('fs')
@@ -16,20 +19,24 @@ const Article = require('../models/Article')
 const {validateMail} = require('../util/validateMail')
 const {generateToken} = require('../util/generateToken')
 const {createId} = require('../util/createId')
+const checkAuth = require('../util/check-auth')
 
 let md5 = require('md5')
 
-let articles: ArticleType[] = []
+const NEW_COMMENT = 'NEW_COMMENT'
 
-const NEW_ARTICLE = 'NEW_ARTICLE'
-
-export default {
+// @ts-ignore
+module.exports = {
+    Comment:{
+        likeCount: (parent:any) => (parent.likes===null ? 0 : parent.likes.length) - (parent.dislikes===null ? 0 : parent.dislikes.length)
+    },
+    Article:{
+        commentCount: (parent:any) => parent.comments===null ? 0 :parent.comments.length
+    },
     Query: {
         // return all articles
-        // @ts-ignore
-        getAllArticles: async (): ArticleType[] | Error => {
+        getAllArticles: async () => {
             return await Article.find().select('id perex title author title imageId createdAt lastUpdatedAt comments')
-            //return articles
         },
         // returns the article that the user opened
         getArticle: async (_: any, {id}: { id: string }) => {
@@ -42,19 +49,25 @@ export default {
             }
         },
         // all articles of a specific person
-        getArticleByUser: async (_:any,{user}:{user:string})=>{
-            console.log(await Article.find({author: user}))
+        getArticleByUser: async (_: any, {user}: { user: string }) => {
             return await Article.find({author: user})
+        },
+        getRelatedArticles: async (_: any, {user}: { user: string })=>{
+
         }
     },
     Mutation: {
         //creating an article and assigning an id
-        createArticle: async (_: any, {input}: { input: ArticleType }) => {
+        createArticle: async (_: any, {input}: { input: ArticleType }, context: any) => {
+            const user = checkAuth(context)
 
             let article = createId(input)
             article.imageId = md5(article.imageId) + '.jpg'
 
             const articleCheck = await Article.findOne({title: article.title})
+
+            article.perex = article.content.split('.').slice(0, 3).join(' ')
+                .replace(/[^0-9,.A-Za-z "]+/, '') //remove markdown syntax
 
             const newArticle = new Article({
                 _id: article.id,
@@ -62,9 +75,9 @@ export default {
                 perex: article.perex,
                 title: article.title,
                 imageId: article.imageId,
-                createdAt: article.createdAt,
-                lastUpdatedAt: article.lastUpdatedAt,
-                author: article.author,
+                createdAt: new Date().toISOString(),
+                lastUpdatedAt: new Date().toISOString(),
+                author: user.username,
                 comments: null
             })
 
@@ -86,11 +99,14 @@ export default {
 
             return {filename, mimetype, encoding};
         },// delete article by id
-        deleteArticle: async (_: any, {id}: { id: string }) => {
+        deleteArticle: async (_: any, {id}: { id: string }, context: any) => {
+            const user = checkAuth(context)
+
             await Article.findByIdAndDelete(id)
             return id;
         },// update article by id,and assignment of new data
-        updateArticle: async (_: any, {input}: { input: UpdateArticle }) => {
+        updateArticle: async (_: any, {input}: { input: UpdateArticle }, context: any) => {
+            const user = checkAuth(context)
 
             const isNameValid = await Article.findOne({title: input.title})
 
@@ -103,7 +119,7 @@ export default {
                         title: input.title,
                         perex: input.perex,
                         content: input.content,
-                        lastUpdatedAt: new Date(),
+                        lastUpdatedAt: new Date().toISOString(),
                         imageId: input.imageId ? md5(input.imageId) + '.jpg' : article.imageId // if the picture has been changed, we encode its name, if not, then we leave the same
                     })
                 } else {
@@ -112,22 +128,6 @@ export default {
             } else {
                 throw Error('Duplicate name/id');
             }
-
-
-            // let article = articles.find(f => f.id === input.id)
-            // if (article !== undefined) {
-            //     article.title = input.title
-            //     article.perex = input.perex
-            //     article.content = input.content
-            //     article.lastUpdatedAt = new Date()
-            //     if (input.imageId) {
-            //         article.imageId = md5(input.imageId) + '.jpg'
-            //     }
-            //
-            //     return article
-            // } else {
-            //     throw new Error('Invalid id.');
-            // }
         },// registration resolve
         registerNewUser: async (_: any, {input}: { input: NewUser }) => {
 
@@ -138,7 +138,7 @@ export default {
 
             const user = await User.findOne({username: input.username})
 
-            if(!user){
+            if (!user) {
                 input.password = await bcrypt.hash(input.password, 12)
 
                 const newUser = new User({
@@ -159,7 +159,7 @@ export default {
                     id: res._id,
                     token
                 }
-            }else{
+            } else {
                 throw new UserInputError('This user already exist!')
             }
         },// login resolve
@@ -189,14 +189,119 @@ export default {
                 token
             }
         },
+        createComment: async (_: any, {articleID, input}: { articleID: string, input: CommentType }, context: any) => {
+            const {username} = checkAuth(context);
+
+            let article = await Article.findById(articleID)
+
+            let createdAt = new Date().toISOString()
+
+            let id = md5(input.author + createdAt)
+
+            if (article) {
+                if (article.comments === null) {
+                    article.comments = {
+                        content: input.content,
+                        author: username,
+                        createdAt,
+                        likes:null
+                    }
+                } else {
+                    article.comments.unshift({
+                        content: input.content,
+                        author: username,
+                        createdAt,
+                        likes:null
+                    })
+                }
+
+                await context.pubsub.publish(NEW_COMMENT,{
+                    commentAdded: article.comments
+                })
+
+                await article.save()
+
+                return article;
+            } else {
+                throw new Error('There is no such article!')
+            }
+        },
+        likeComment: async(_:any, { commentID,articleID }:{commentID:string,articleID:string}, context:any) =>{
+            const { username } = checkAuth(context);
+
+            const post = await Article.findById(articleID);
+            if (post) {
+
+                const comment= post.comments.find((comment:any) => comment.id === commentID);
+
+                if (comment) {
+                    if (comment.likes!== null) {
+                        if(comment.likes.find((like:any) => like.username === username) || comment.dislikes.find((dislike:any) => dislike.username === username )){
+                            comment.likes = comment.likes.filter((like:any) => like.username !== username);
+                            comment.dislikes = comment.dislikes.filter((like:any) => like.username !== username);
+
+                        }else{
+                            comment.likes.push({
+                                username,
+                                createdAt: new Date().toISOString()
+                            });
+                        }
+                        // Post already likes, unlike it
+                    } else {
+                        // Not liked, like post
+                        comment.likes={
+                            username,
+                            createdAt: new Date().toISOString()
+                        };
+                    }
+                } else {
+                    throw new UserInputError('Comment not found');
+                }
+                await post.save();
+                return post;
+            } else throw new UserInputError('Post not found');
+        },
+        dislikeComment: async(_:any, { commentID,articleID }:{commentID:string,articleID:string}, context:any) =>{
+            const { username } = checkAuth(context);
+
+            const post = await Article.findById(articleID);
+            if (post) {
+
+                const comment= post.comments.find((comment:any) => comment.id === commentID);
+
+                if (comment) {
+                    if (comment.dislikes!== null) {
+                        if(comment.dislikes.find((dislike:any) => dislike.username === username ) || comment.likes.find((like:any) => like.username === username )){
+                            comment.dislikes = comment.dislikes.filter((like:any) => like.username !== username);
+                            comment.likes = comment.likes.filter((like:any) => like.username !== username);
+
+                        }else{
+                            comment.dislikes.push({
+                                username,
+                                createdAt: new Date().toISOString()
+                            });
+                        }
+                        // Post already likes, unlike it
+                    } else {
+                        // Not liked, like post
+                        comment.dislikes={
+                            username,
+                            createdAt: new Date().toISOString()
+                        };
+                    }
+                } else {
+                    throw new UserInputError('Comment not found');
+                }
+                await post.save();
+                return post;
+            } else throw new UserInputError('Post not found');
+        }
     },
     Subscription: {
-        newArticle: {
-            subscribe: () => pubsub.asyncIterator(NEW_ARTICLE)
+        commentAdded: {
+            subscribe: () => pubsub.asyncIterator(NEW_COMMENT)
         }
     },
     //file upload configuration
     Upload: GraphQLUpload
 }
-
-// module.exports = {resolvers}

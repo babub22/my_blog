@@ -7,12 +7,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {UPDATE_ARTICLE, UPLOAD_IMAGE} from "../querys/mutation/article";
 
 const Edit = () => {
-    //хуево работает едит
         //get id from url string
         let urlString = useLocation()
 
         let queryId = urlString.pathname.toString().replace(/\/edit\//, '')
-        console.log(queryId)
 
         //graphql query declaration
         let {data: oneArticle, loading: loadingOneArticle} = useQuery(GET_ONE_ARTICLE, {
@@ -73,80 +71,48 @@ const Edit = () => {
             //imageUrl === undefined ? setIsImageInvalid(true) : setIsImageInvalid(false)
             // >
 
-            if (title && content.split(' ').filter(f => f.length > 2).length > 20)  {
+            if (title && content.split(' ').filter(f => f.length > 2).length > 20) {
 
                 let perex: string = content.split('.').slice(0, 3).join(' ')//.concat('...');
-                //let lastUpdatedAt = new Date()
                 let id = queryId
 
-                console.log(originalImage!=='')
+                let imageId = imageUrl?.name
 
-               // if (!isImageInvalid) {// if image changed
-
-                    let imageId = imageUrl?.name
-
-                    editArticle({
-                        variables: {
-                            input: {
-                                id,
-                                title,
-                                content,
-                                perex,
-                                imageId
-                            }
+                editArticle({
+                    variables: {
+                        input: {
+                            id,
+                            title,
+                            content,
+                            perex,
+                            imageId
                         }
-                    }).then(() => {
-                        console.log('Yea sended')
-                        if (!updateLoading && originalImage==='') {
-                            uploadImage({
-                                variables: {file: imageUrl}
-                            }).then(() => {
-                                //if (!imageLoading) {
-                                    setAlertType('success')
-                                    setErrorHandle('')
-                                    setOpenAlert(true);
-                               // }
-                            }).catch(e => {
-                                setOpenAlert(true);
-                                setErrorHandle(e)
-                                setAlertType('error')
-                            })
-                        }else{
+                    }
+                }).then(() => {
+                    if (!updateLoading && originalImage === '') {
+                        uploadImage({
+                            variables: {file: imageUrl}
+                        }).then(() => {
+                            //if (!imageLoading) {
                             setAlertType('success')
                             setErrorHandle('')
                             setOpenAlert(true);
-                        }
-                    }).catch(e => {
+                            // }
+                        }).catch(e => {
+                            setOpenAlert(true);
+                            setErrorHandle(e)
+                            setAlertType('error')
+                        })
+                    } else {
+                        setAlertType('success')
+                        setErrorHandle('')
                         setOpenAlert(true);
-                        setErrorHandle(e)
-                        setAlertType('error')
-                    })
-
-                // } //else if (isImageInvalid) { // if the image is not changed
-                //     console.log('here')
-                //     setIsImageInvalid(false)
-                //     editArticle({
-                //         variables: {
-                //             input: {
-                //                 id,
-                //                 title,
-                //                 content,
-                //                 perex,
-                //             }
-                //         }
-                //     }).then(({data}) => {
-                //         if (!updateLoading) {
-                //             console.log(data)
-                //             setAlertType('success')
-                //             setErrorHandle('')
-                //             setOpenAlert(true);
-                //         }
-                //     }).catch(e => {
-                //         setOpenAlert(true);
-                //         setErrorHandle(e)
-                //         setAlertType('error')
-                //     })
-                // }
+                    }
+                }).catch(e => {
+                    setOpenAlert(true);
+                    setErrorHandle(e)
+                    setAlertType('error')
+                })
             }
         }
 
@@ -181,25 +147,19 @@ const Edit = () => {
                         |
                         <>
                             <Typography>{
-                                imageUrl!==undefined ? imageUrl.name : originalImage}</Typography>
-                            {/*imageUrl.length != 0*/ imageUrl!==undefined ?
-                                    <IconButton onClick={() => {
-                                        setImageUrl(undefined)
-                                    }} aria-label="edit" color="primary">
-                                        <DeleteIcon/>
-                                    </IconButton>
-                                    : null}
+                                imageUrl !== undefined ? imageUrl.name : originalImage}</Typography>
+                            {imageUrl !== undefined ?
+                                <IconButton onClick={() => {
+                                    setImageUrl(undefined)
+                                }} aria-label="edit" color="primary">
+                                    <DeleteIcon/>
+                                </IconButton>
+                                : null}
                         </>
                     </Box>
                     {isImageInvalid ?
                         <Typography variant='body2' sx={{ml: '0.5rem', color: '#de6363', mt: '0.2rem'}}>Upload an
                             image!</Typography> : null}
-                    {/*// <Button onClick={()=>{setImageUrls('')}}> X </Button>*/}
-
-                    {/*|*/}
-                    {/*<Button variant="text" component="label">*/}
-                    {/*    Delete*/}
-                    {/*</Button>*/}
 
                     <Typography sx={{mt: '2.5rem', mb: '0.5rem'}} variant='body2'> Content </Typography>
                     <TextField fullWidth placeholder='Support markdown!'
@@ -212,17 +172,17 @@ const Edit = () => {
                 </Box>
                 <Snackbar open={openAlert} autoHideDuration={4000} onClose={handleSnackbarClose}>
                     {errorHandle.message === 'Duplicate name/id' ?
-                            <Alert variant="filled" severity='error' sx={{width: '100%'}}>
-                                This name is already in use, choose another one!
+                        <Alert variant="filled" severity='error' sx={{width: '100%'}}>
+                            This name is already in use, choose another one!
+                        </Alert>
+                        : alertType === 'error' ?
+                            <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
+                                Something went wrong :(
                             </Alert>
-                            : alertType === 'error' ?
-                                <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
-                                    Something went wrong :(
-                                </Alert>
-                                :
-                                <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
-                                    The article has been sent successfully!
-                                </Alert>}
+                            :
+                            <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
+                                The article has been sent successfully!
+                            </Alert>}
                 </Snackbar>
             </>
         );

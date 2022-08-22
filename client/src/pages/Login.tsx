@@ -10,8 +10,6 @@ const Login = () => {
     const [login,{loading:loadingLogin,error:registerError}]=useMutation(LOGIN)
     const navigate=useNavigate()
 
-    console.log(AuthContext)
-
     const handleLogin=()=>{
 
         !username ? setIsUsernameInvalid(true) : setIsUsernameInvalid(false)
@@ -26,7 +24,6 @@ const Login = () => {
                 }
             }).then(({data})=>{
                 if(!loadingLogin){
-                    console.log(data)
                     context.login(data.login)
                     navigate('/')
                 }

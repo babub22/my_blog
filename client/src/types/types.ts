@@ -1,13 +1,14 @@
-export interface Article{
-    __typename:    string;
-    id:            string;
-    perex:         string;
-    title:         string;
-    author:        string;
-    imageId:       string;
-    createdAt:     Date;
+export interface Article {
+    __typename: string;
+    id: string;
+    perex: string;
+    title: string;
+    author: string;
+    imageId: string;
+    commentCount: number;
+    createdAt: Date;
     lastUpdatedAt: Date;
-    comments:      null;
+    comments: Comments[] | null;
 }
 
 export interface User {
@@ -17,3 +18,21 @@ export interface User {
     iat: number;
     exp: number;
 }
+
+export interface Comments {
+    __typename: string;
+    id: string;
+    author: string;
+    content: string;
+    createdAt: Date;
+    likeCount: number;
+    likes: Like[] | null;
+}
+
+export interface Like {
+    __typename: string;
+    id: string;
+    username: string;
+    createdAt: Date;
+}
+

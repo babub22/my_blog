@@ -57,22 +57,14 @@ const Create = () => {
         // >
 
         if (title && content.split(' ').filter(f => f.length > 2).length > 20 && imageUrl !== undefined && user !== null) {
-            console.log('Send it!')
-            let perex: string = content.split('.').slice(0, 3).join(' ') //make on server
-            let createdAt = new Date() //make on server
-            let lastUpdatedAt = new Date() //make on server
             let author: string = user.username
             let imageId = imageUrl?.name
-            console.log(imageId)
 
             createArticle({ // first send title+content
                 variables: {
                     input: {
                         title,
                         content,
-                        perex,
-                        lastUpdatedAt,
-                        createdAt,
                         imageId,
                         author
                     }
@@ -97,7 +89,6 @@ const Create = () => {
                     })
                 }
             }).catch(e => {
-                console.log(e)
                 setOpenAlert(true);
                 setErrorHandle(e)
                 setAlertType('error')

@@ -1,22 +1,26 @@
-import {ApolloServer} from 'apollo-server-express'
-import {ApolloServerPluginDrainHttpServer} from 'apollo-server-core'
+const {PubSub} = require("graphql-subscriptions");
 
-import {makeExecutableSchema} from '@graphql-tools/schema';
-import {WebSocketServer} from 'ws';
-import {useServer} from 'graphql-ws/lib/use/ws';
+const {ApolloServer} =require('apollo-server-express')
+const {ApolloServerPluginDrainHttpServer} = require('apollo-server-core')
 
-import express from 'express'
-import http from 'http'
-import cors from 'cors'
+const {makeExecutableSchema} =require('@graphql-tools/schema');
+const {WebSocketServer} = require('ws');
+const {useServer} = require('graphql-ws/lib/use/ws');
+
+const express = require('express')
+const http = require('http')
+const cors = require('cors')
 
 const { graphqlUploadExpress } = require("graphql-upload-minimal");
 
 require('dotenv').config()
 
+const pubsub=new PubSub()
+
 const mongoose=require('mongoose');
 
-import typeDefs from "./schema/typeDefs";
-import resolvers from "./resolvers/resolvers";
+const typeDefs =require("./schema/typeDefs");
+const resolvers =require("./resolvers/resolvers");
 
 const schema = makeExecutableSchema({typeDefs, resolvers});
 
@@ -35,7 +39,7 @@ async function listen(port: number) {
     const serverCleanup = useServer({schema}, wsServer);
 
     const server = new ApolloServer({// @ts-ignore
-        schema, uploads: false,
+        schema, uploads: false, context:({req})=>({req,pubsub}),
         plugins: [ApolloServerPluginDrainHttpServer({httpServer}),
             {
                 async serverWillStart() {

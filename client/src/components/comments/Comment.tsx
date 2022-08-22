@@ -3,53 +3,88 @@ import {Avatar, Box, IconButton, Typography} from "@mui/material";
 import ReactMarkdown from "react-markdown";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import moment from "moment";
+import {useMutation} from "@apollo/client";
+import {DISLIKE_COMMENT, LIKE_COMMENT} from "../../querys/mutation/article";
+import {Comments} from '../../types/types';
 
-const Comment = () => {
-
+const Comment = ({comments, articleID}: { comments: Comments[] | null, articleID: string }) => {
     let [likeCounter, setLikeCounter] = useState(0);
 
-    const plusLike = () => {
+    const [likeComment] = useMutation(LIKE_COMMENT);
+    const [dislikeComment] = useMutation(DISLIKE_COMMENT);
+
+
+    const plusLike = (commentID: string) => {
+        likeComment({
+            variables: {
+                articleID,
+                commentID,
+            }
+        })
+
+
         setLikeCounter(likeCounter + 1)
     }
 
-    const minusLike = () => {
-        setLikeCounter(--likeCounter)
+    const minusLike = (commentID: string) => {
+        dislikeComment({
+            variables: {
+                articleID,
+                commentID,
+            }
+        })
+
+        setLikeCounter(likeCounter - 1)
     }
 
-    return (
-        <>
-                <Box sx={{mt: '1.5rem', display: 'flex'}}>
-                    <Avatar>Z</Avatar>
+    if (comments !== null) {
+        return (
+            <>
+                {comments.map(
+                    comment =>
+                        <Box key={comment.id} sx={{mt: '1.5rem', display: 'flex'}}>
+                            <Avatar>{comment!.author.split('')[0]}</Avatar>
 
-                    <Box sx={{ml: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'baseline'}}>
-                        <Box sx={{display: 'flex', alignItems: 'baseline'}}>
-                            <Typography variant='h6'>Nansdasd Adasdas</Typography>
-                            <Typography sx={{ml: '1rem'}} variant='body2'>2 hour ago</Typography>
+                            <Box sx={{ml: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'baseline'}}>
+                                <Box sx={{display: 'flex', alignItems: 'baseline'}}>
+                                    <Typography variant='h6'>{comment.author}</Typography>
+                                    <Typography sx={{ml: '1rem'}}
+                                                variant='body2'>{moment(comment.createdAt).fromNow()}</Typography>
+                                </Box>
+                                <ReactMarkdown children={comment.content}/>
+                                <Box sx={{display: 'flex', alignItems: 'baseline'}}>
+                                    <Typography variant='subtitle1'>
+                                        {comment.likeCount > 0 ? '+' + comment.likeCount : comment.likeCount}
+                                        |
+                                        <IconButton aria-label="delete" color="primary"
+                                                    onClick={() => plusLike(comment.id)}>
+                                            <ExpandLessIcon/>
+                                        </IconButton>
+                                        |
+                                        <IconButton aria-label="delete" color="primary"
+                                                    onClick={() => minusLike(comment.id)}>
+                                            <ExpandMoreIcon/>
+                                        </IconButton>
+                                    </Typography>
+                                </Box>
+                            </Box>
                         </Box>
-                        <ReactMarkdown >###You see,wire telegraph ###isakind ofavery,very long cat.You pull his tail in
-                            New York and his
-                            head is meowing in Los Angeles.Do you understand this?And radio operates exactly the
-                            same
-                            way:you send signals here,they receive them there.The only difference is that there
-                            is no cat.</ReactMarkdown>
-                        <Box sx={{display: 'flex', alignItems: 'baseline'}}>
-                            <Typography variant='subtitle1'>
-                                {likeCounter > 0 ? '+' + likeCounter : likeCounter}&nbsp;
-                                |
-                                <IconButton aria-label="delete" color="primary" onClick={plusLike}>
-                                    <ExpandLessIcon/>
-                                </IconButton>
-                                |
-                                <IconButton aria-label="delete" color="primary" onClick={minusLike}>
-                                    <ExpandMoreIcon/>
-                                </IconButton>
-                            </Typography>
-                        </Box>
-                    </Box>
-                </Box>
-
-        </>
-    );
+                )}
+            </>
+        );
+    } else {
+        return (
+            <Box display="flex"
+                 justifyContent="center"
+                 alignItems="center">
+                <Typography variant='h4' sx={{opacity: 0.2, mt: '4rem', mb: '4rem'}}>
+                    No comments
+                </Typography>
+            </Box>
+        )
+    }
 };
+
 
 export default Comment;

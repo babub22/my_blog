@@ -29,6 +29,16 @@ export const UPLOAD_IMAGE = gql`
     }
 `;
 
+export const CREATE_COMMENT = gql`
+    mutation createComment($articleID:String!,$input:CommentInput!) {
+        createComment(articleID:$articleID,input:$input){
+            comments {
+                id,author,createdAt,content,likes{username}
+            }
+        }
+    }
+`;
+
 export const REGISTER_USER = gql`
     mutation registerNewUser($input: RegistrationFormInput!) {
         registerNewUser(input: $input){
@@ -45,20 +55,35 @@ export const LOGIN = gql`
     }
 `;
 
+export const LIKE_COMMENT = gql`
+    mutation likeComment($articleID: ID!,$commentID:ID!) {
+        likeComment(articleID: $articleID,commentID:$commentID) {
+            id
+            comments {
+                likes {
+                    id
+                    createdAt
+                    username
+                }
+                likeCount
+            }
+        }
+    }
+`;
 
+export const DISLIKE_COMMENT = gql`
+    mutation dislikeComment($articleID: ID!,$commentID:ID!) {
+        dislikeComment(articleID: $articleID,commentID:$commentID) {
+            id
+            comments {
+                likes {
+                    id
+                    createdAt
+                    username
+                }
+                likeCount
+            }
+        }
+    }
+`;
 
-
-// export const UPLOAD_ARTICLE_IMAGE=gql`
-//         mutation UploadImage($file:Upload!){
-//             uploadFile(file:$file)
-//         }
-//     `
-
-
-// const MUTATION = gql`
-//   mutation ($file: Upload!) {
-//     uploadFile(file: $file) {
-//       success
-//     }
-//   }
-// `;

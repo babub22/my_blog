@@ -4,7 +4,7 @@ import {DataGrid, GridColDef} from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {useMutation, useQuery} from "@apollo/client";
-import {GET_ALL_ARTICLES, GET_ARTICLE_BY_USER, GET_ONE_ARTICLE} from "../querys/query/article";
+import {GET_ARTICLE_BY_USER} from "../querys/query/article";
 import {DELETE_ARTICLE} from "../querys/mutation/article";
 import {Article, User} from "../types/types";
 import {AuthContext} from "../context/auth";
@@ -12,14 +12,14 @@ import {AuthContext} from "../context/auth";
 
 const MyArticles = () => {
 
-    const {user}: { user: User | null } = useContext(AuthContext)
+    let {user}: { user: User | null } = useContext(AuthContext)
 
-    // let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
     let [deleteArticle, {loading: articleDeleting}] = useMutation(DELETE_ARTICLE);
 
+
     let {data: serverUserArticles, loading: loadingUserArticles} = useQuery(GET_ARTICLE_BY_USER, {
-        variables: { //@ts-ignore
-            user: user.username
+        variables: {
+            user: user!.username
         }
     })
 
@@ -34,13 +34,12 @@ const MyArticles = () => {
         if (!loadingUserArticles) {
             setUserArticles(serverUserArticles.getArticleByUser)//.filter(f=>f.id!==currentArticle))
         }
-        console.log(serverUserArticles)
     }, [serverUserArticles, isDelete])
 
 
     // handle delete button in table
     const getCommentNumber = (params: { row: { title: any; }; }) => {
-        return (userArticles.filter(f => f.title === params.row.title).map(map => map.comments)).length || []
+        return userArticles.filter(f => f.title === params.row.title).map(map=>map.commentCount)
     }
 
     // table options
@@ -96,7 +95,6 @@ const MyArticles = () => {
         }).then(({data}) => {
             if (!articleDeleting) {
                 setOpenAlert(true);
-                console.log('Deleted ' + data)
                 setAlertType('success')
                 setUserArticles(userArticles.filter(f => f.id !== id))
             }

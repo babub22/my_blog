@@ -1,19 +1,29 @@
-import React, {useEffect, useState} from 'react';
-import {Avatar, Box, TextField, Typography} from "@mui/material";
-import {useLocation } from "react-router-dom";
+import React, {useContext, useEffect, useState} from 'react';
+import {Avatar, Box, Button, TextField, Typography} from "@mui/material";
+import {useLocation} from "react-router-dom";
 import RelatedList from "../components/RelatedList";
 import ReactMarkdown from 'react-markdown'
-import {useQuery} from "@apollo/client";
+import {useMutation, useQuery, useSubscription} from "@apollo/client";
 import {GET_ALL_ARTICLES, GET_ONE_ARTICLE} from "../querys/query/article";
 import Comment from "../components/comments/Comment";
-import { Article } from '../types/types';
+import {Article, User} from '../types/types';
+import {CREATE_COMMENT} from "../querys/mutation/article";
+import {AuthContext} from "../context/auth";
+import {COMMENTS_SUBSCRIPTION} from "../querys/subscription/article";
+import moment from "moment";
 
 const SpecificArticle = () => {
 
+    let {user}: { user: User | null } = useContext(AuthContext)
+
+    const { data, loading } = useSubscription(
+        COMMENTS_SUBSCRIPTION);
 
     let urlString = useLocation()
 
-    let queryId=urlString.pathname.toString().replace(/\/article\//,'')
+    let queryId = urlString.pathname.toString().replace(/\/article\//, '')
+
+    let [createComment, {data:createdComment,loading: commentLoading}] = useMutation(CREATE_COMMENT);
 
     let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
     let {data: oneArticle, loading: loadingOneArticle} = useQuery(GET_ONE_ARTICLE, {
@@ -25,6 +35,10 @@ const SpecificArticle = () => {
     let [relatedArticles, setRelatedArticles] = useState<Article[]>([])
     let [currentArticle, setCurrentArticle] = useState<Article>()
 
+    let [commentContent, setCommentContent] = useState('')
+    const [isCommentInvalid, setIsCommentInvalid] = useState(false);
+
+
     // fetch this article data
     useEffect(() => {
         if (!loadingOneArticle) {
@@ -35,7 +49,7 @@ const SpecificArticle = () => {
     // fetch data for related articles
     useEffect(() => {
         if (!loadingAllArticles) {
-            setRelatedArticles(allArticles.getAllArticles)//.filter(f=>f.id!==currentArticle))
+            setRelatedArticles(allArticles.getAllArticles)
         }
     }, [allArticles])
 
@@ -52,8 +66,8 @@ const SpecificArticle = () => {
     }
 
     // randomize for related articles
-    const randomize=(array:any)=> {
-        let currentIndex = array.length,  randomIndex;
+    const randomize = (array: any) => {
+        let currentIndex = array.length, randomIndex;
         while (currentIndex !== 0) {
 
             randomIndex = Math.floor(Math.random() * currentIndex);
@@ -66,16 +80,33 @@ const SpecificArticle = () => {
         return array;
     }
 
+    const sendComment = () => {
+
+        !commentContent ? setIsCommentInvalid(true) : setIsCommentInvalid(false)
+
+        if (commentContent) {
+            createComment({
+                variables: {
+                    articleID: queryId,
+                    input: {
+                        author: user!.username,
+                        content: commentContent
+                    }
+                }
+            })
+        }
+    }
+
     return (
         <>
             <Typography variant='h4'>{currentArticle?.title}</Typography>
             <Box sx={{display: 'flex', mt: '1rem'}// @ts-ignore
-            }> <Typography variant='subtitle1'>{currentArticle?.author} | {currentArticle?.createdAt} </Typography>
+            }> <Typography variant='subtitle1'>{currentArticle?.author}&nbsp;&nbsp; | &nbsp;&nbsp;{moment(currentArticle?.createdAt).format("DD/MM/YYYY")} </Typography>
             </Box>
 
             <Box sx={{maxWidth: '650vw'}}>
                 <Box sx={{mr: '1rem', mt: '1.5rem', mb: '1.5rem'}}>
-                    <Box >
+                    <Box>
                         <Box sx={{objectFit: 'cover', height: '600px'}}>
                             <img
                                 style={{
@@ -83,7 +114,7 @@ const SpecificArticle = () => {
                                     height: '600px',
                                     objectFit: 'cover',
                                 }}
-                                src={"http://localhost:8000/images/"+currentArticle?.imageId}
+                                src={"http://localhost:8000/images/" + currentArticle?.imageId}
                                 alt={currentArticle?.title}/>
                         </Box>
 
@@ -92,31 +123,25 @@ const SpecificArticle = () => {
                     </Box>
 
                     <Box sx={{borderTop: '2px solid #ededed', mb: '1.5rem'}}>
-                        <Typography sx={{mt: '1rem', mb: '0.75rem'}} variant='h5'> Comments</Typography>
+                        <Typography sx={{mt: '1rem', mb: '0.75rem'}} variant='h5'> Comments {currentArticle?.commentCount?(currentArticle?.commentCount):null}</Typography>
                         <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'baseline'}}>
-                            <Avatar sx={{mr: '1.5rem'}}>Z</Avatar>
-                            <TextField fullWidth variant="outlined" placeholder='Join the discussion'/>
+                            <Avatar sx={{mr: '1.5rem'}}>{user!.username.split('')[0]}</Avatar>
+                            <TextField onChange={e => {
+                                setCommentContent(e.target.value)
+                            }}
+                                       value={commentContent}
+                                       error={isCommentInvalid}
+                                       helperText={isCommentInvalid ? 'The comment cannot be empty' : null}
+                                       fullWidth variant="outlined" placeholder='Join the discussion'/>
+                            <Button onClick={() => sendComment()}> Send</Button>
                         </Box>
-
-                        <Comment/>
+                        {!loadingOneArticle&&currentArticle?<Comment comments={
+                            currentArticle.comments} articleID={currentArticle.id}/>:null}
                     </Box>
                 </Box>
 
-                {relatedArticles.length > 3
-                    ?
-                    <Box sx={{pl: '1rem', pb: '1.5rem', borderTop: '2px solid #ededed', height: '100%'}}>
-                        <Box display="flex"
-                             justifyContent="center"
-                             alignItems="center"
-                             sx={{mb:'2rem',mt:'2rem'}}>
-                            <Typography variant='h5'>Related articles</Typography>
-                        </Box>
-                        <Box display="flex"
-                             justifyContent="center"
-                             alignItems="center">
-                            <RelatedList articles={randomize(relatedArticles.filter(f =>f.id!==currentArticle?.id))}/>
-                        </Box>
-                    </Box>
+                {relatedArticles.length > 3 ?
+                    <RelatedList articles={relatedArticles.filter(f => f.id !== currentArticle?.id)}/>
                     : null}
             </Box>
 
@@ -125,14 +150,3 @@ const SpecificArticle = () => {
 };
 
 export default SpecificArticle;
-
-// 45
-// 45
-// https://www.target.com.au/medias/static_content/product/images/large/92/55/A1709255.jpg
-//     https://www.target.com.au/medias/static_content/product/images/large/92/53/A1709253.jpg
-//         b.box Spout Cup - Assorted*
-// b.box Sippy Cup - Disney Princess Aurora
-// b.box Sippy Cup - Disney Toy Story Woody
-// $9
-// $12
-// $12

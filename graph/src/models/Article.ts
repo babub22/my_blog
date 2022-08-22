@@ -7,13 +7,22 @@ const articleSchema=new Schema({
     title: String,
     imageId: String,
     createdAt: String,
+    commentCount:Number,
     lastUpdatedAt: String,
     author: String,
     comments: [{
         author:String,
         content: String,
         createdAt: String,
-        rating: Number
+        likeCount:Number,
+        likes: [{
+            createdAt: String,
+            username: String,
+        }],
+        dislikes: [{
+            createdAt: String,
+            username: String,
+        }]
     }]
 })
 
