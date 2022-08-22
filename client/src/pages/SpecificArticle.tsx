@@ -139,9 +139,9 @@ const SpecificArticle = () => {
                     </Box>
                 </Box>
 
-                {relatedArticles.length > 3 ?
-                    <RelatedList articles={relatedArticles.filter(f => f.id !== currentArticle?.id)}/>
-                    : null}
+                {/*{relatedArticles.length > 3 ?*/}
+                {/*    <RelatedList articles={relatedArticles.filter(f => f.id !== currentArticle?.id)}/>*/}
+                {/*    : null}*/}
             </Box>
 
         </>

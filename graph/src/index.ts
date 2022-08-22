@@ -61,7 +61,8 @@ async function listen(port: number) {
 }
 
 // start server only after successful database connection
-mongoose.connect(process.env.MONGODB,{useNewUrlParser:true}).then(async ()=>{await listen(8000)})
+mongoose.connect(process.env.MONGODB ,{useNewUrlParser:true}).then(async ()=>{await listen(8000)})
     .then(()=>{ console.log('🚀 Server is ready at http://localhost:8000/graphql ')}).catch((e:Error)=>{
     console.error('💀 Error starting the node server', e)
+
 })
