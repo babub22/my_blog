@@ -1,6 +1,6 @@
 # Blog web app
 
-Full-stack blog project. 
+Fullstack test task for [Applifting](https://github.com/Applifting/fullstack-exercise/blob/master/assignment.md)
 
 Author: Vladyslav Lisovyi
 
