@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {Avatar, Box, IconButton, Typography} from "@mui/material";
 import ReactMarkdown from "react-markdown";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -6,9 +6,13 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import moment from "moment";
 import {useMutation} from "@apollo/client";
 import {DISLIKE_COMMENT, LIKE_COMMENT} from "../../querys/mutation/article";
-import {Comments} from '../../types/types';
+import {Comments, User} from '../../types/types';
+import {green, grey, pink, red} from "@mui/material/colors";
+import {AuthContext} from "../../context/auth";
 
 const Comment = ({comments, articleID}: { comments: Comments[] | null, articleID: string }) => {
+    let {user}: { user: User | null } = useContext(AuthContext)
+
     let [likeCounter, setLikeCounter] = useState(0);
 
     const [likeComment] = useMutation(LIKE_COMMENT);
@@ -38,6 +42,9 @@ const Comment = ({comments, articleID}: { comments: Comments[] | null, articleID
         setLikeCounter(likeCounter - 1)
     }
 
+    // @ts-ignore
+    console.log(comments.map(map=>map.likes?.find(f=>f.username===user.username)))
+
     if (comments !== null) {
         return (
             <>
@@ -56,15 +63,23 @@ const Comment = ({comments, articleID}: { comments: Comments[] | null, articleID
                                 <Box sx={{display: 'flex', alignItems: 'baseline'}}>
                                     <Typography variant='subtitle1'>
                                         {comment.likeCount > 0 ? '+' + comment.likeCount : comment.likeCount}
-                                        |
+                                        &nbsp; |
                                         <IconButton aria-label="delete" color="primary"
                                                     onClick={() => plusLike(comment.id)}>
-                                            <ExpandLessIcon/>
+                                            {comment.likes?.find(f=>f.username===user?.username)?
+                                                <ExpandLessIcon sx={{ color: green[900] }}/>
+                                                :
+                                                <ExpandLessIcon sx={{ color: grey[500] }}/>
+                                            }
                                         </IconButton>
                                         |
                                         <IconButton aria-label="delete" color="primary"
                                                     onClick={() => minusLike(comment.id)}>
-                                            <ExpandMoreIcon/>
+                                            {comment.dislikes?.find(f=>f.username===user?.username)?
+                                                <ExpandMoreIcon sx={{ color: red[900] }}/>
+                                                :
+                                                <ExpandMoreIcon sx={{ color: grey[500] }}/>
+                                            }
                                         </IconButton>
                                     </Typography>
                                 </Box>

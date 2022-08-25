@@ -30,6 +30,11 @@ export let GET_ONE_ARTICLE = gql`
                     id,
                     username,
                     createdAt,
+                },dislikes
+                {
+                    id,
+                    username,
+                    createdAt,
                 }
             }
         }

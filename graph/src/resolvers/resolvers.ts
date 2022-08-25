@@ -7,7 +7,7 @@ import {Schema} from "mongoose";
 
 // const pubsub = new PubSub();
 
-const pubsub=new PubSub()
+const pubsub = new PubSub()
 
 const path = require('path')
 const fs = require('fs')
@@ -27,11 +27,11 @@ const NEW_COMMENT = 'NEW_COMMENT'
 
 // @ts-ignore
 module.exports = {
-    Comment:{
-        likeCount: (parent:any) => (parent.likes===null ? 0 : parent.likes.length) - (parent.dislikes===null ? 0 : parent.dislikes.length)
+    Comment: {
+        likeCount: (parent: any) => (parent.likes === null ? 0 : parent.likes.length) - (parent.dislikes === null ? 0 : parent.dislikes.length)
     },
-    Article:{
-        commentCount: (parent:any) => parent.comments===null ? 0 :parent.comments.length
+    Article: {
+        commentCount: (parent: any) => parent.comments === null ? 0 : parent.comments.length
     },
     Query: {
         // return all articles
@@ -52,8 +52,8 @@ module.exports = {
         getArticleByUser: async (_: any, {user}: { user: string }) => {
             return await Article.find({author: user})
         },
-        getRelatedArticles: async (_: any, {articleID}: { articleID: string })=>{
-            let relatedArticles=await Article.find().select('id perex title author title imageId createdAt lastUpdatedAt comments')
+        getRelatedArticles: async (_: any, {articleID}: { articleID: string }) => {
+            let relatedArticles = await Article.find().select('id perex title author title imageId createdAt lastUpdatedAt comments')
 
             const randomize = (array: ArticleType[]) => {
                 let currentIndex = array.length, randomIndex;
@@ -69,8 +69,8 @@ module.exports = {
                 return array;
             }
 
-            if(relatedArticles.length>3){
-                return randomize(relatedArticles.filter((f:ArticleType) =>f.id!==articleID).slice(0, 3))
+            if (relatedArticles.length > 3) {
+                return randomize(relatedArticles.filter((f: ArticleType) => f.id !== articleID).slice(0, 3))
             }
         }
     },
@@ -222,18 +222,18 @@ module.exports = {
                         content: input.content,
                         author: username,
                         createdAt,
-                        likes:null
+                        likes: null
                     }
                 } else {
                     article.comments.unshift({
                         content: input.content,
                         author: username,
                         createdAt,
-                        likes:null
+                        likes: null
                     })
                 }
 
-                await context.pubsub.publish(NEW_COMMENT,{
+                await context.pubsub.publish(NEW_COMMENT, {
                     commentAdded: article.comments
                 })
 
@@ -244,30 +244,36 @@ module.exports = {
                 throw new Error('There is no such article!')
             }
         },
-        likeComment: async(_:any, { commentID,articleID }:{commentID:string,articleID:string}, context:any) =>{
-            const { username } = checkAuth(context);
+        likeComment: async (_: any, {commentID, articleID}: { commentID: string, articleID: string }, context: any) => {
+            const {username} = checkAuth(context);
 
             const post = await Article.findById(articleID);
             if (post) {
 
-                const comment= post.comments.find((comment:any) => comment.id === commentID);
+                const comment = post.comments.find((comment: any) => comment.id === commentID);
 
                 if (comment) {
-                    if (comment.likes!== null) {
-                        if(comment.likes.find((like:any) => like.username === username) || comment.dislikes.find((dislike:any) => dislike.username === username )){
-                            comment.likes = comment.likes.filter((like:any) => like.username !== username);
-                            comment.dislikes = comment.dislikes.filter((like:any) => like.username !== username);
+                    if (comment.likes !== null) {
+                        if(comment.likes.find((like: any) => like.username === username)){ //if the like has already been set, then it is removed
+                            comment.likes = comment.likes.filter((like: any) => like.username !== username);
+                        }
+                        else if (comment.dislikes.find((dislike: any) => dislike.username === username) && !comment.likes.find((like: any) => like.username === username)) { // if we try to put a like but we already have a dislike, the dislike will be reset and the like will be put instead
 
-                        }else{
+                            comment.dislikes = comment.dislikes.filter((dislike: any) => dislike.username !== username);
+
                             comment.likes.push({
                                 username,
                                 createdAt: new Date().toISOString()
                             });
                         }
-                        // Post already likes, unlike it
+                        else { //if dislike and like are equal to 0, just push new like
+                            comment.likes.push({
+                                username,
+                                createdAt: new Date().toISOString()
+                            });
+                        }
                     } else {
-                        // Not liked, like post
-                        comment.likes={
+                        comment.likes = {
                             username,
                             createdAt: new Date().toISOString()
                         };
@@ -279,30 +285,40 @@ module.exports = {
                 return post;
             } else throw new UserInputError('Post not found');
         },
-        dislikeComment: async(_:any, { commentID,articleID }:{commentID:string,articleID:string}, context:any) =>{
-            const { username } = checkAuth(context);
+        dislikeComment: async (_: any, {
+            commentID,
+            articleID
+        }: { commentID: string, articleID: string }, context: any) => {
+            const {username} = checkAuth(context);
 
             const post = await Article.findById(articleID);
             if (post) {
 
-                const comment= post.comments.find((comment:any) => comment.id === commentID);
+                const comment = post.comments.find((comment: any) => comment.id === commentID);
 
                 if (comment) {
-                    if (comment.dislikes!== null) {
-                        if(comment.dislikes.find((dislike:any) => dislike.username === username ) || comment.likes.find((like:any) => like.username === username )){
-                            comment.dislikes = comment.dislikes.filter((like:any) => like.username !== username);
-                            comment.likes = comment.likes.filter((like:any) => like.username !== username);
+                    if (comment.dislikes !== null) {
+                        console.log(comment.dislikes)
+                        if(comment.dislikes.find((dislike: any) => dislike.username === username)){ // if the dislike has already been set, then it is removed
+                            comment.dislikes = comment.dislikes.filter((dislike: any) => dislike.username !== username);
+                        }
+                        else if (comment.likes.find((like: any) => like.username === username) && !comment.dislikes.find((dislike: any) => dislike.username === username)) { // if we try to put a dislike but we already have a like, the like will be reset and the dislike will be put instead
 
-                        }else{
+                            comment.likes = comment.likes.filter((like: any) => like.username !== username);
+
                             comment.dislikes.push({
                                 username,
                                 createdAt: new Date().toISOString()
                             });
                         }
-                        // Post already likes, unlike it
+                        else { //if dislike and like are equal to 0, just push new like
+                            comment.dislikes.push({
+                                username,
+                                createdAt: new Date().toISOString()
+                            });
+                        }
                     } else {
-                        // Not liked, like post
-                        comment.dislikes={
+                        comment.dislikes = {
                             username,
                             createdAt: new Date().toISOString()
                         };

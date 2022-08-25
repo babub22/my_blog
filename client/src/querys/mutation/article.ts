@@ -33,7 +33,7 @@ export const CREATE_COMMENT = gql`
     mutation createComment($articleID:String!,$input:CommentInput!) {
         createComment(articleID:$articleID,input:$input){
             comments {
-                id,author,createdAt,content,likes{username}
+                id,author,createdAt,content,likes{username},dislikes{username}
             }
         }
     }

@@ -85,7 +85,7 @@ const SpecificArticle = () => {
             <Box sx={{maxWidth: '650vw'}}>
                 <Box sx={{mr: '1rem', mt: '1.5rem', mb: '1.5rem'}}>
                     <Box>
-                        <Box sx={{objectFit: 'cover', height: '600px'}}>
+                        <Box sx={{objectFit: 'cover', height: '600px',pb: '1rem',}}>
                             <img
                                 style={{
                                     width: '800px',
@@ -96,8 +96,13 @@ const SpecificArticle = () => {
                                 alt={currentArticle?.title}/>
                         </Box>
 
-                        <ReactMarkdown // @ts-ignore
-                            children={currentArticle?.content}/>
+                        <Box sx={{
+                            //borderTop: '2px solid #ededed',
+                            fontFamily: 'Roboto',
+                        }} >
+                            <ReactMarkdown // @ts-ignore
+                                children={currentArticle?.content}/>
+                        </Box>
                     </Box>
 
                     <Box sx={{borderTop: '2px solid #ededed', mb: '1.5rem'}}>

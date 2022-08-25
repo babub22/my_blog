@@ -27,6 +27,7 @@ export interface Comments {
     createdAt: Date;
     likeCount: number;
     likes: Like[] | null;
+    dislikes: Like[] | null;
 }
 
 export interface Like {
