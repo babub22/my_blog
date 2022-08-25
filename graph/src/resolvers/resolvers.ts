@@ -52,8 +52,26 @@ module.exports = {
         getArticleByUser: async (_: any, {user}: { user: string }) => {
             return await Article.find({author: user})
         },
-        getRelatedArticles: async (_: any, {user}: { user: string })=>{
+        getRelatedArticles: async (_: any, {articleID}: { articleID: string })=>{
+            let relatedArticles=await Article.find().select('id perex title author title imageId createdAt lastUpdatedAt comments')
 
+            const randomize = (array: ArticleType[]) => {
+                let currentIndex = array.length, randomIndex;
+                while (currentIndex !== 0) {
+
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+
+                    [array[currentIndex], array[randomIndex]] = [
+                        array[randomIndex], array[currentIndex]];
+                }
+
+                return array;
+            }
+
+            if(relatedArticles.length>3){
+                return randomize(relatedArticles.filter((f:ArticleType) =>f.id!==articleID).slice(0, 3))
+            }
         }
     },
     Mutation: {

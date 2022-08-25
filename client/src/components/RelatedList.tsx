@@ -3,21 +3,7 @@ import {Typography, Card, CardActionArea, CardMedia, CardContent, Box} from "@mu
 import {Article} from '../types/types';
 
 const RelatedList = ({articles}: { articles: Article[] }) => {
-
-    const randomize = (array: any):Article[] => {
-        let currentIndex = array.length, randomIndex;
-        while (currentIndex !== 0) {
-
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-
-            [array[currentIndex], array[randomIndex]] = [
-                array[randomIndex], array[currentIndex]];
-        }
-
-        return array;
-    }
-
+    console.log(articles)
     return (
         <>
             <Box sx={{pl: '1rem', pb: '1.5rem', borderTop: '2px solid #ededed', height: '100%'}}>
@@ -30,7 +16,7 @@ const RelatedList = ({articles}: { articles: Article[] }) => {
                 <Box display="flex"
                      justifyContent="center"
                      alignItems="center">
-                    {randomize(articles).slice(0, 3).map(article =>
+                    {articles.map(article =>
                         <Card key={article.id} sx={{maxWidth: 345, ml: '2rem'}}>
                             <CardActionArea href={'/article/' + article.id}>
                                 <CardMedia

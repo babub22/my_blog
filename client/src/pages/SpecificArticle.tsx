@@ -4,7 +4,7 @@ import {useLocation} from "react-router-dom";
 import RelatedList from "../components/RelatedList";
 import ReactMarkdown from 'react-markdown'
 import {useMutation, useQuery, useSubscription} from "@apollo/client";
-import {GET_ALL_ARTICLES, GET_ONE_ARTICLE} from "../querys/query/article";
+import {GET_ALL_ARTICLES, GET_ONE_ARTICLE, GET_RELATED_ARTICLES} from "../querys/query/article";
 import Comment from "../components/comments/Comment";
 import {Article, User} from '../types/types';
 import {CREATE_COMMENT} from "../querys/mutation/article";
@@ -24,7 +24,13 @@ const SpecificArticle = () => {
 
     let [createComment, {loading: commentLoading}] = useMutation(CREATE_COMMENT);
 
-    let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
+    let {data: getRelatedArticles, loading: loadingRelatedArticles} = useQuery(GET_RELATED_ARTICLES, {
+        variables: {
+            articleID: queryId
+        }
+    })
+
+    // let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
     let {data: oneArticle, loading: loadingOneArticle} = useQuery(GET_ONE_ARTICLE, {
         variables: {
             id: queryId
@@ -47,37 +53,10 @@ const SpecificArticle = () => {
 
     // fetch data for related articles
     useEffect(() => {
-        if (!loadingAllArticles) {
-            setRelatedArticles(allArticles.getAllArticles)
+        if (!loadingRelatedArticles) {
+            setRelatedArticles(getRelatedArticles.getRelatedArticles)
         }
-    }, [allArticles])
-
-
-    // comment func
-    let [likeCounter, setLikeCounter] = useState(0);
-
-    const plusLike = () => {
-        setLikeCounter(likeCounter + 1)
-    }
-
-    const minusLike = () => {
-        setLikeCounter(--likeCounter)
-    }
-
-    // randomize for related articles
-    const randomize = (array: any) => {
-        let currentIndex = array.length, randomIndex;
-        while (currentIndex !== 0) {
-
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-
-            [array[currentIndex], array[randomIndex]] = [
-                array[randomIndex], array[currentIndex]];
-        }
-
-        return array;
-    }
+    }, [getRelatedArticles])
 
     const sendComment = () => {
 
@@ -139,9 +118,8 @@ const SpecificArticle = () => {
                     </Box>
                 </Box>
 
-                {/*{relatedArticles.length > 3 ?*/}
-                {/*    <RelatedList articles={relatedArticles.filter(f => f.id !== currentArticle?.id)}/>*/}
-                {/*    : null}*/}
+                {relatedArticles!==null? <RelatedList articles={relatedArticles}/> : null}
+
             </Box>
 
         </>

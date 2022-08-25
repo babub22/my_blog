@@ -42,5 +42,12 @@ export let GET_ARTICLE_BY_USER = gql`
             id,content,perex,title,author,imageId,title,createdAt,commentCount,lastUpdatedAt,comments{id}
         }
     }
+`
 
+export let GET_RELATED_ARTICLES=gql`
+    query getRelatedArticles($articleID:ID!){
+        getRelatedArticles(articleID: $articleID){
+            id,content,perex,title,author,imageId,title,createdAt,commentCount,lastUpdatedAt,comments{id}
+        }
+    }   
 `
