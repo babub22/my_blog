@@ -97,7 +97,8 @@ module.exports=gql`
         
         # Get articles of specific user
         getArticleByUser(user:String!):[Article]
-        
+
+        # Get 3 random articles
         getRelatedArticles(articleID:ID!):[Article]
     }
     

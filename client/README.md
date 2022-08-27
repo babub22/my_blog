@@ -1,7 +1,6 @@
 # Client side
 
-The client side of the blog-app  
-Author: Vladyslav Lisovyi
+The client side of the blog.
 
 ## Available Scripts
 

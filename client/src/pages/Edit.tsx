@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, AlertColor, Box, Button, IconButton, Snackbar, TextField, Typography} from "@mui/material";
+import {Box, Button, IconButton, TextField, Typography} from "@mui/material";
 import {useMutation, useQuery} from "@apollo/client";
 import {GET_ONE_ARTICLE} from "../querys/query/article";
 import {useLocation} from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {UPDATE_ARTICLE, UPLOAD_IMAGE} from "../querys/mutation/article";
+import {SnackBarError, SnackBarSuccess} from "../components/SnackBar";
 
 const Edit = () => {
         //get id from url string
@@ -33,7 +34,7 @@ const Edit = () => {
                 setContent(oneArticle.getArticle.content)
                 setOriginalImage(oneArticle.getArticle.imageId)
             }
-        }, [oneArticle])
+        }, [oneArticle,loadingOneArticle])
 
         //handle empty inputs
         const [isTitleInvalid, setIsTitleInvalid] = useState(false);
@@ -41,17 +42,8 @@ const Edit = () => {
         const [isImageInvalid, setIsImageInvalid] = useState(false);
 
         //handle snackbar alerts
-        const [openAlert, setOpenAlert] = useState(false);
-
-        const [alertType, setAlertType] = useState<AlertColor>('error')
-        const [errorHandle, setErrorHandle] = useState<any>('')
-
-        const handleSnackbarClose = (event: React.SyntheticEvent | Event, reason?: string) => {
-            if (reason === 'clickaway') {
-                return;
-            }
-            setOpenAlert(false);
-        };
+        const [isSuccess, setIsSuccess] = useState(false);
+        const [errorHandle, setErrorHandle] = useState<Error>()
 
         //image change handle
         const onImageChange = (e: any) => {
@@ -63,8 +55,6 @@ const Edit = () => {
 
         // send changes on server
         const handleEdit = () => {
-            setOpenAlert(false)
-
             // validating input data <
             !title ? setIsTitleInvalid(true) : setIsTitleInvalid(false)
             content.split(' ').filter(f => f.length > 2).length < 20 ? setIsContentInvalid(true) : setIsContentInvalid(false)
@@ -94,24 +84,18 @@ const Edit = () => {
                             variables: {file: imageUrl}
                         }).then(() => {
                             //if (!imageLoading) {
-                            setAlertType('success')
-                            setErrorHandle('')
-                            setOpenAlert(true);
+                            setIsSuccess(true)
+                            setErrorHandle(undefined)
                             // }
                         }).catch(e => {
-                            setOpenAlert(true);
                             setErrorHandle(e)
-                            setAlertType('error')
                         })
                     } else {
-                        setAlertType('success')
-                        setErrorHandle('')
-                        setOpenAlert(true);
+                        setIsSuccess(true)
+                        setErrorHandle(undefined)
                     }
                 }).catch(e => {
-                    setOpenAlert(true);
                     setErrorHandle(e)
-                    setAlertType('error')
                 })
             }
         }
@@ -125,7 +109,7 @@ const Edit = () => {
                     </Typography>
                     <Button sx={{ml: '2.5rem'}} variant="contained" onClick={() => {
                         handleEdit()
-                    }}>Publish Article</Button>
+                    }}>Update Article</Button>
                 </Box>
                 <Box sx={{mt: '3rem', width: '47vw'}}>
                     <Typography sx={{mb: '0.5rem'}} variant='body2'> Article Title </Typography>
@@ -144,7 +128,6 @@ const Edit = () => {
                             Upload new
                             <input hidden accept="image/*" type="file" onChange={onImageChange}/>
                         </Button>
-                        |
                         <>
                             <Typography>{
                                 imageUrl !== undefined ? imageUrl.name : originalImage}</Typography>
@@ -170,20 +153,9 @@ const Edit = () => {
                         setContent(e.target.value)
                     }}/>
                 </Box>
-                <Snackbar open={openAlert} autoHideDuration={4000} onClose={handleSnackbarClose}>
-                    {errorHandle.message === 'Duplicate name/id' ?
-                        <Alert variant="filled" severity='error' sx={{width: '100%'}}>
-                            This name is already in use, choose another one!
-                        </Alert>
-                        : alertType === 'error' ?
-                            <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
-                                Something went wrong :(
-                            </Alert>
-                            :
-                            <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
-                                The article has been sent successfully!
-                            </Alert>}
-                </Snackbar>
+
+                <SnackBarError error={errorHandle}/>
+                <SnackBarSuccess success={isSuccess}/>
             </>
         );
     }

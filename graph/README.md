@@ -1,8 +1,6 @@
 # GraphQL client
 
-The server side **(GraphQL)** of the blog-app  
-
-Author: Vladyslav Lisovyi
+The server side **(GraphQL)** of the blog.
 
 ## Available Scripts
 

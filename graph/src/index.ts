@@ -29,7 +29,7 @@ async function listen(port: number) {
     const app = express()
     const httpServer = http.createServer(app)
 
-    app.use(graphqlUploadExpress({ maxFileSize: 200000, maxFiles: 10 }));
+    app.use(graphqlUploadExpress({ maxFileSize: 2000000, maxFiles: 10 }));
     app.use(cors());
 
     const wsServer = new WebSocketServer({

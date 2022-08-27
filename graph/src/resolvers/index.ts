@@ -1,6 +1,9 @@
+const {GraphQLUpload} = require("graphql-upload-minimal");
+
 const articleResolvers = require('./articles');
 const usersResolvers = require('./users');
 const commentsResolvers = require('./comments');
+const imageResolvers = require('./image');
 
 module.exports = {
     Comment: {
@@ -13,11 +16,13 @@ module.exports = {
         ...articleResolvers.Query
     },
     Mutation: {
+        ...imageResolvers.Mutation,
         ...usersResolvers.Mutation,
         ...articleResolvers.Mutation,
         ...commentsResolvers.Mutation
     },
     Subscription: {
         ...commentsResolvers.Subscription
-    }
+    },
+    Upload: GraphQLUpload
 };

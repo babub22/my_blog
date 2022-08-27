@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {Box,Typography} from "@mui/material";
+import {Box, LinearProgress, Typography} from "@mui/material";
 import Search from "../components/searchBar/Search";
 import ArticleList from "../components/ArticleList";
 import Filter from "../components/searchBar/Filter";
@@ -11,6 +11,8 @@ const Main = () => {
     const [search, setSearch] = useState<string>('');
     const [select, setSelect] = useState<string>('');
 
+    const [loading,setLoading]=useState(false)
+
     let {data:allArticles,loading:allArticlesLoading}=useQuery(GET_ALL_ARTICLES)
 
     let [articles, setArticles] = useState<Article[]>([]);
@@ -19,8 +21,9 @@ const Main = () => {
     useEffect(()=>{
         if(!allArticlesLoading){
             setArticles(allArticles.getAllArticles)
+            setLoading(true)
         }
-    },[allArticles])
+    },[allArticles,allArticlesLoading])
 
     // Handle select filter
     const handleSelect = (e: any) => {
@@ -50,6 +53,10 @@ const Main = () => {
                 article.title.toLowerCase().includes(e.target.value.toLowerCase())
             ))
     };
+
+    if(!loading){
+        return <LinearProgress color="inherit" sx={{ opacity:0.2}}/>
+    }
 
     return (
         <>

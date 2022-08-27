@@ -3,8 +3,8 @@ import {Avatar, Box, Button, TextField, Typography} from "@mui/material";
 import {useLocation} from "react-router-dom";
 import RelatedList from "../components/RelatedList";
 import ReactMarkdown from 'react-markdown'
-import {useMutation, useQuery, useSubscription} from "@apollo/client";
-import {GET_ALL_ARTICLES, GET_ONE_ARTICLE, GET_RELATED_ARTICLES} from "../querys/query/article";
+import {useMutation, useQuery} from "@apollo/client";
+import {GET_ONE_ARTICLE, GET_RELATED_ARTICLES} from "../querys/query/article";
 import Comment from "../components/comments/Comment";
 import {Article, User} from '../types/types';
 import {CREATE_COMMENT} from "../querys/mutation/article";
@@ -30,7 +30,6 @@ const SpecificArticle = () => {
         }
     })
 
-    // let {data: allArticles, loading: loadingAllArticles} = useQuery(GET_ALL_ARTICLES)
     let {data: oneArticle, loading: loadingOneArticle} = useQuery(GET_ONE_ARTICLE, {
         variables: {
             id: queryId
@@ -49,17 +48,16 @@ const SpecificArticle = () => {
         if (!loadingOneArticle) {
             setCurrentArticle(oneArticle.getArticle)
         }
-    }, [oneArticle])
+    }, [oneArticle,loadingOneArticle])
 
     // fetch data for related articles
     useEffect(() => {
         if (!loadingRelatedArticles) {
             setRelatedArticles(getRelatedArticles.getRelatedArticles)
         }
-    }, [getRelatedArticles])
+    }, [getRelatedArticles,loadingRelatedArticles])
 
     const sendComment = () => {
-
         !commentContent ? setIsCommentInvalid(true) : setIsCommentInvalid(false)
 
         if (commentContent) {
@@ -71,14 +69,18 @@ const SpecificArticle = () => {
                         content: commentContent
                     }
                 }
+            }).then(()=>{
+                if(!commentLoading)
+                    window.location.reload();
             })
         }
     }
 
+    if(currentArticle)
     return (
         <>
             <Typography variant='h4'>{currentArticle?.title}</Typography>
-            <Box sx={{display: 'flex', mt: '1rem'}// @ts-ignore
+            <Box sx={{display: 'flex', mt: '1rem'}
             }> <Typography variant='subtitle1'>{currentArticle?.author}&nbsp;&nbsp; | &nbsp;&nbsp;{moment(currentArticle?.createdAt).format("DD/MM/YYYY")} </Typography>
             </Box>
 
@@ -96,12 +98,9 @@ const SpecificArticle = () => {
                                 alt={currentArticle?.title}/>
                         </Box>
 
-                        <Box sx={{
-                            //borderTop: '2px solid #ededed',
-                            fontFamily: 'Roboto',
-                        }} >
-                            <ReactMarkdown // @ts-ignore
-                                children={currentArticle?.content}/>
+                        <Box sx={{fontFamily: 'Roboto'}} >
+                            <ReactMarkdown
+                                children={currentArticle.content}/>
                         </Box>
                     </Box>
 
@@ -118,7 +117,7 @@ const SpecificArticle = () => {
                                        fullWidth variant="outlined" placeholder='Join the discussion'/>
                             <Button onClick={() => sendComment()}> Send</Button>
                         </Box>
-                        {!loadingOneArticle&&currentArticle?<Comment comments={
+                        {!loadingOneArticle && currentArticle && currentArticle.comments ?<Comment comments={
                             currentArticle.comments} articleID={currentArticle.id}/>:null}
                     </Box>
                 </Box>
@@ -129,6 +128,7 @@ const SpecificArticle = () => {
 
         </>
     );
+    else return null
 };
 
 export default SpecificArticle;

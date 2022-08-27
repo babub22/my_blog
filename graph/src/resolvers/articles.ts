@@ -1,4 +1,5 @@
 import {ArticleType, UpdateArticle} from "../types/types";
+
 const {createId} = require('../util/createId')
 
 const checkAuth = require('../util/check-auth');
@@ -91,13 +92,14 @@ module.exports = {
         updateArticle: async (_: any, {input}: { input: UpdateArticle }, context: any) => {
             const user = checkAuth(context)
 
-            const isNameValid = await Article.findOne({title: input.title})
+            const article = await Article.findById(input.id)
+            if (article) {
+                let isNameValid = await Article.findOne({title: input.title})
+                if (isNameValid) {
+                    isNameValid = article.imageId === md5(input.imageId) ? isNameValid : false // if only the picture was changed
+                }
 
-            if (!isNameValid) { // if an article with the same name already exists returns an error
-
-                const article = await Article.findById(input.id) // get an article that we will update
-
-                if (article) {
+                if (!isNameValid) { // if an article with the same name already exists returns an error
                     await Article.findByIdAndUpdate(input.id, {
                         title: input.title,
                         perex: input.perex,
@@ -105,11 +107,12 @@ module.exports = {
                         lastUpdatedAt: new Date().toISOString(),
                         imageId: input.imageId ? md5(input.imageId) + '.jpg' : article.imageId // if the picture has been changed, we encode its name, if not, then we leave the same
                     })
+
                 } else {
-                    throw new Error('Wrong ID!');
+                    throw Error('Duplicate name/id');
                 }
             } else {
-                throw Error('Duplicate name/id');
+                throw new Error('Wrong ID!');
             }
         }
     }

@@ -5,6 +5,7 @@ export interface Article {
     title: string;
     author: string;
     imageId: string;
+    content: string;
     commentCount: number;
     createdAt: Date;
     lastUpdatedAt: Date;

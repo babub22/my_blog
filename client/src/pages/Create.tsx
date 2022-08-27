@@ -1,15 +1,16 @@
 import React, {useContext, useState} from 'react';
-import {Alert, AlertColor, Box, Button, IconButton, Snackbar, TextField, Typography} from "@mui/material";
+import {Box, Button, IconButton, TextField, Typography} from "@mui/material";
 import {useMutation} from "@apollo/client";
 import {CREATE_ARTICLE, UPLOAD_IMAGE} from "../querys/mutation/article";
 import DeleteIcon from '@mui/icons-material/Delete';
 import {AuthContext} from "../context/auth";
-import { User } from '../types/types';
+import {User} from '../types/types';
+import {SnackBarError, SnackBarSuccess} from "../components/SnackBar";
 
 const Create = () => {
     // graphql query declaration
-    let [createArticle, {loading: articleLoading}] = useMutation(CREATE_ARTICLE);
-    const [uploadImage, {loading: imageLoading}] = useMutation(UPLOAD_IMAGE)
+    const [createArticle, {loading: articleLoading}] = useMutation(CREATE_ARTICLE);
+    const [uploadImage] = useMutation(UPLOAD_IMAGE)
 
     // get current user info
     let {user}: { user: User | null } = useContext(AuthContext)
@@ -25,17 +26,8 @@ const Create = () => {
     const [isImageInvalid, setIsImageInvalid] = useState(false);
 
     //handle snackbar alerts <
-    const [openAlert, setOpenAlert] = useState(false);
-
-    const [alertType, setAlertType] = useState<AlertColor>('error')
+    const [isSuccess, setIsSuccess] = useState(false);
     const [errorHandle, setErrorHandle] = useState<Error>()
-
-    const handleSnackbarClose = (event: React.SyntheticEvent | Event, reason?: string) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setOpenAlert(false);
-    };
     // >
 
     // handle image change <
@@ -48,8 +40,6 @@ const Create = () => {
 
     // create and send new article to a server
     const handleCreate = () => {
-        setOpenAlert(false)
-
         // validating input data <
         !title ? setIsTitleInvalid(true) : setIsTitleInvalid(false)
         content.split(' ').filter(f => f.length > 2).length < 20 ? setIsContentInvalid(true) : setIsContentInvalid(false)
@@ -75,26 +65,21 @@ const Create = () => {
                         variables: {file: imageUrl}
                     }).then(() => {
                         //if (!imageLoading) {
-                            setImageUrls(undefined)
-                            setAlertType('success')
-                            setErrorHandle(undefined)
-                            setOpenAlert(true);
-                            setContent('')
-                            setTitle('')
-                       // }
+                        setIsSuccess(true)
+                        setErrorHandle(undefined)
+
+                        // make inputs fields empty after publish
+                        setImageUrls(undefined)
+                        setContent('')
+                        setTitle('')
+                        // }
                     }).catch(e => {
-                        setOpenAlert(true);
                         setErrorHandle(e)
-                        setAlertType('error')
                     })
                 }
             }).catch(e => {
-                setOpenAlert(true);
                 setErrorHandle(e)
-                setAlertType('error')
             })
-
-
         }
     }
 
@@ -128,21 +113,21 @@ const Create = () => {
                 {/*   */}
                 {/*  Image input  */}
                 <Typography sx={{mt: '2.5rem'}} variant='body2'> Featured image </Typography>
-                <Box sx={{display: 'flex'}}>
+                <Box sx={{display: 'flex', alignItems: 'baseline'}}>
                     <Button variant="text" component="label">
                         Upload
                         <input hidden accept="image/*" type="file" onChange={onImageChange}/>
                     </Button>
                     {imageUrl !== undefined &&
                     imageUrl.name ?
-                        <>
+                        <Box sx={{display: 'flex', alignItems: 'baseline'}}>
                             <Typography>{imageUrl.name}</Typography>
-                            <IconButton onClick={() => {
+                            <IconButton sx={{p: '0', m: '0'}} onClick={() => {
                                 setImageUrls(undefined)
                             }} aria-label="edit" color="primary">
-                                <DeleteIcon/>
+                                <DeleteIcon sx={{p: 0, m: 0}}/>
                             </IconButton>
-                        </> : null}
+                        </Box> : null}
                 </Box>
                 {isImageInvalid ?
                     <Typography variant='body2' sx={{ml: '0.5rem', color: '#de6363', mt: '0.2rem'}}>Upload an
@@ -158,20 +143,8 @@ const Create = () => {
                 />
                 {/*  */}
                 {/*  Snackbar alerts  */}
-                <Snackbar open={openAlert} autoHideDuration={4000} onClose={handleSnackbarClose}>
-                    {errorHandle?.message === 'Duplicate name/id' ?
-                        <Alert variant="filled" severity='error' sx={{width: '100%'}}>
-                            This name is already in use, choose another one!
-                        </Alert>
-                        : alertType === 'error' ?
-                            <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
-                                Something went wrong :(
-                            </Alert>
-                            :
-                            <Alert variant="filled" severity={alertType} sx={{width: '100%'}}>
-                                The article has been sent successfully!
-                            </Alert>}
-                </Snackbar>
+                <SnackBarError error={errorHandle}/>
+                <SnackBarSuccess success={isSuccess}/>
                 {/*    */}
             </Box>
 
