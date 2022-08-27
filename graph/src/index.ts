@@ -20,7 +20,8 @@ const pubsub=new PubSub()
 const mongoose=require('mongoose');
 
 const typeDefs =require("./schema/typeDefs");
-const resolvers =require("./resolvers/resolvers");
+const resolvers = require('./resolvers');
+
 
 const schema = makeExecutableSchema({typeDefs, resolvers});
 
@@ -34,6 +35,7 @@ async function listen(port: number) {
     const wsServer = new WebSocketServer({
         server: httpServer,
         path: '/graphql',
+
     });
 
     const serverCleanup = useServer({schema}, wsServer);
