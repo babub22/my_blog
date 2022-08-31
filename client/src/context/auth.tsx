@@ -41,7 +41,7 @@ function  authReducer(state,action){
     }
 }
 
-function  AuthProvider(props:any){
+function AuthProvider(props:any){
     const [state,dispatch]=useReducer(authReducer,initialState)
 
     function login(userData:any){

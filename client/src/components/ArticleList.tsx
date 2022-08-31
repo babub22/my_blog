@@ -4,19 +4,6 @@ import {Article} from "../types/types";
 import moment from "moment";
 
 const ArticleList = ({articles}: { articles: Article[] }) => {
-    const getFormatDate = (date: Date): string => {
-        date = new Date(date)
-
-        const yyyy = date.getFullYear()
-        let mm: string | number = date.getMonth() + 1
-        let dd: string | number = date.getDate()
-
-        if (dd < 10) dd = '0' + dd;
-        if (mm < 10) mm = '0' + mm;
-
-        return dd + '/' + mm + '/' + yyyy;
-    }
-
     return (
         <>
             {[...articles].sort((a, b) => Date.parse(b.createdAt.toString()) - Date.parse(a.createdAt.toString())).map(article =>

@@ -30,7 +30,7 @@ const Main = () => {
         setSelect(e.target.value)
     }
 
-    function getFilteredList() {
+    const getFilteredList= () =>{
         if (!select) {
             return articles;
         }

@@ -18,7 +18,6 @@ const Comment = ({comments, articleID}: { comments: Comments[] | null, articleID
     const [likeComment] = useMutation(LIKE_COMMENT);
     const [dislikeComment] = useMutation(DISLIKE_COMMENT);
 
-
     const plusLike = (commentID: string) => {
         likeComment({
             variables: {
@@ -41,9 +40,6 @@ const Comment = ({comments, articleID}: { comments: Comments[] | null, articleID
 
         setLikeCounter(likeCounter - 1)
     }
-
-    // @ts-ignore
-    console.log(comments.map(map=>map.likes?.find(f=>f.username===user.username)))
 
     if (comments !== null) {
         return (

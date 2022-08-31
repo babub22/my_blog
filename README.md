@@ -6,9 +6,9 @@ Author: Vladyslav Lisovyi
 
 ## Technologies that have been used
 
-**Frontend:** MaterialUI, Apollo ,React, React-route, React-markdown.
+**Frontend:** MaterialUI, React, React-route, React-markdown.
 
-**Backend:** GraphQL, Apollo-server, Express , Websocket.
+**Backend:** GraphQL, Apollo-Server-Express, Express, Websocket.
 
 ## Project Description
 

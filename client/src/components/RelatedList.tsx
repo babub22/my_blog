@@ -3,7 +3,6 @@ import {Typography, Card, CardActionArea, CardMedia, CardContent, Box} from "@mu
 import {Article} from '../types/types';
 
 const RelatedList = ({articles}: { articles: Article[] }) => {
-    console.log(articles)
     return (
         <>
             <Box sx={{pl: '1rem', pb: '1.5rem', borderTop: '2px solid #ededed', height: '100%'}}>
