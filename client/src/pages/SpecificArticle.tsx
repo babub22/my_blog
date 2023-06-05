@@ -1,15 +1,15 @@
-import React, {useContext, useEffect, useState} from 'react';
+import {useContext, useEffect, useState} from 'react';
 import {Avatar, Box, Button, TextField, Typography} from "@mui/material";
 import {useLocation} from "react-router-dom";
 import RelatedList from "../components/RelatedList";
 import ReactMarkdown from 'react-markdown'
 import {useMutation, useQuery} from "@apollo/client";
 import {GET_ONE_ARTICLE, GET_RELATED_ARTICLES} from "../querys/query/article";
-import Comment from "../components/comments/Comment";
 import {Article, User} from '../types/types';
 import {CREATE_COMMENT} from "../querys/mutation/article";
 import {AuthContext} from "../context/auth";
 import moment from "moment";
+import CommentsSection from '../components/comments/CommentsSection';
 
 const SpecificArticle = () => {
 
@@ -117,7 +117,7 @@ const SpecificArticle = () => {
                                        fullWidth variant="outlined" placeholder='Join the discussion'/>
                             <Button onClick={() => sendComment()}> Send</Button>
                         </Box>
-                        {!loadingOneArticle && currentArticle && currentArticle.comments ?<Comment comments={
+                        {!loadingOneArticle && currentArticle && currentArticle.comments ?<CommentsSection comments={
                             currentArticle.comments} articleID={currentArticle.id}/>:null}
                     </Box>
                 </Box>
